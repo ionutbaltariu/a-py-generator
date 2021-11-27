@@ -10,32 +10,51 @@ datatype_converter = {
 
 def generate_db_create_code(path: str, resources: str):
     with open(f'{path}/create_db_and_tables.sql', 'w', encoding='utf-8') as f:
-        script_string = ''
-        script_string += create_database_and_use_it()
-
+        script_string = create_database_and_use_it()
         resources_dict = json.loads(resources)
+
         for resource in resources_dict:
             script_string += f'CREATE TABLE `{resource["table_name"]}` (\n'
-            fields = resource['fields']
-            for field in fields:
-                script_string += f'\t`{field["name"]}` {get_sql_datatype_from_field(field)} ' \
-                                 f'{get_sql_nullability(field["nullable"])}, \n'
-
-            script_string += f'\tPRIMARY KEY (`{resource["primary_key"]}`), \n'
-
-            for unique_key in resource["uniques"]:
-                script_string += f'\tUNIQUE KEY `{unique_key["name"]}` ('
-                unique_fields = unique_key["unique_fields"]
-                unique_fields_len = len(unique_fields) - 1
-                for index, field in enumerate(unique_fields):
-                    script_string += f'`{field}`'
-                    if index != unique_fields_len:
-                        script_string += ', '
-                script_string += '),\n'
-
+            script_string += generate_table_fields(resource["fields"])
+            script_string += generate_primary_key(resource["primary_key"])
+            script_string += generate_unique_keys(resource["uniques"])
             script_string += ')\n'
 
+        script_string = script_string.replace(',\n)', '\n)')
+
         f.write(script_string)
+
+
+def generate_table_fields(fields: dict) -> str:
+    script_string = ''
+
+    for field in fields:
+        script_string += f'\t`{field["name"]}` {get_sql_datatype_from_field(field)} ' \
+                         f'{get_sql_nullability(field["nullable"])}, \n'
+
+    return script_string
+
+
+def generate_primary_key(pk: dict) -> str:
+    return f'\tPRIMARY KEY (`{pk}`), \n'
+
+
+def generate_unique_keys(unique_keys: dict) -> str:
+    script_string = ''
+
+    for unique_key in unique_keys:
+        script_string = f'\tUNIQUE KEY `{unique_key["name"]}` ('
+        unique_fields = unique_key["unique_fields"]
+        unique_fields_len = len(unique_fields) - 1
+
+        for index, field in enumerate(unique_fields):
+            script_string += f'`{field}`'
+            if index != unique_fields_len:
+                script_string += ', '
+
+    script_string += '),\n'
+
+    return script_string
 
 
 def create_database_and_use_it(database_name: str = 'generated_db'):
@@ -57,6 +76,7 @@ def get_sql_datatype_from_field(field: dict):
 
 def get_sql_nullability(is_nullable: bool):
     return 'NOT NULL' if not is_nullable else ''
+
 
 # testing purpose
 generate_db_create_code('.', json.dumps([
