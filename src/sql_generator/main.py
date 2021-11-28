@@ -9,19 +9,19 @@ datatype_converter = {
 
 
 def generate_db_create_code(path: str, resources: str):
+    script_string = create_database_and_use_it()
+    resources_dict = json.loads(resources)
+
+    for resource in resources_dict:
+        script_string += f'CREATE TABLE `{resource["table_name"]}` (\n'
+        script_string += generate_table_fields(resource["fields"])
+        script_string += generate_primary_key(resource["primary_key"])
+        script_string += generate_unique_keys(resource["uniques"])
+        script_string += ')\n'
+
+    script_string = script_string.replace(',\n)', '\n)')
+
     with open(f'{path}/create_db_and_tables.sql', 'w', encoding='utf-8') as f:
-        script_string = create_database_and_use_it()
-        resources_dict = json.loads(resources)
-
-        for resource in resources_dict:
-            script_string += f'CREATE TABLE `{resource["table_name"]}` (\n'
-            script_string += generate_table_fields(resource["fields"])
-            script_string += generate_primary_key(resource["primary_key"])
-            script_string += generate_unique_keys(resource["uniques"])
-            script_string += ')\n'
-
-        script_string = script_string.replace(',\n)', '\n)')
-
         f.write(script_string)
 
 
@@ -45,12 +45,8 @@ def generate_unique_keys(unique_keys: dict) -> str:
     for unique_key in unique_keys:
         script_string = f'\tUNIQUE KEY `{unique_key["name"]}` ('
         unique_fields = unique_key["unique_fields"]
-        unique_fields_len = len(unique_fields) - 1
-
-        for index, field in enumerate(unique_fields):
-            script_string += f'`{field}`'
-            if index != unique_fields_len:
-                script_string += ', '
+        unique_fields_tokens = [f'`{token}`' for token in unique_fields]
+        script_string += ', '.join(unique_fields_tokens)
 
     script_string += '),\n'
 
@@ -107,7 +103,8 @@ generate_db_create_code('.', json.dumps([
             {
                 "name": "books_un_1",
                 "unique_fields": [
-                    "title"
+                    "title",
+                    "curu"
                 ]
             }
         ]
