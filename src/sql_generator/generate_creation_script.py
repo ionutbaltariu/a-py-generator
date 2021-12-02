@@ -1,4 +1,9 @@
 import json
+from pathlib import Path
+
+
+def get_project_root() -> Path:
+    return Path(__file__).parent.parent.parent
 
 datatype_converter = {
     'string': 'varchar',
@@ -8,7 +13,7 @@ datatype_converter = {
 }
 
 
-def generate_db_create_code(path: str, resources: str):
+def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/generated/'):
     script_string = create_database_and_use_it()
     resources_dict = json.loads(resources)
 
@@ -75,7 +80,7 @@ def get_sql_nullability(is_nullable: bool):
 
 
 # testing purpose
-generate_db_create_code('.', json.dumps([
+generate_db_create_code(json.dumps([
     {
         "name": "Book",
         "table_name": "Books",
@@ -104,7 +109,7 @@ generate_db_create_code('.', json.dumps([
                 "name": "books_un_1",
                 "unique_fields": [
                     "title",
-                    "curu"
+                    "year_of_publishing"
                 ]
             }
         ]
