@@ -10,8 +10,9 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
-  - .cache/pip
-  - venv
+  paths:
+    - .cache/pip
+    - venv
 
 before_script:
   - python3 -V
