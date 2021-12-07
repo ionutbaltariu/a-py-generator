@@ -27,16 +27,19 @@ def generate_sqlalchemy_classes(resources: str) -> None:
 
 
 def generate_sqlalechemy_class_fields(resource: dict) -> str:
+    primary_key_field = resource["primary_key"]
     sqlalchemy_code = ''
+    # look for another way, this approach is checking at every field
     for field in resource["fields"]:
-        sqlalchemy_code += generate_class_field_from_resource(field)
+        is_primary_key = (primary_key_field == field["name"])
+        sqlalchemy_code += generate_class_field_from_resource(field, is_primary_key)
 
     sqlalchemy_code += '\n\n'
 
     return sqlalchemy_code
 
 
-def generate_class_field_from_resource(field: dict) -> str:
+def generate_class_field_from_resource(field: dict, is_primary_key: bool) -> str:
     tokens = []
 
     if field["type"] == "string":
@@ -45,6 +48,9 @@ def generate_class_field_from_resource(field: dict) -> str:
         tokens.append(datatype_converter[field["type"]])
 
     tokens.append('nullable=True' if field["nullable"] is True else 'nullable=False')
+
+    if is_primary_key:
+        tokens.append('primary_key=True')
 
     deconstructed_tokens = ', '.join(tokens)
 

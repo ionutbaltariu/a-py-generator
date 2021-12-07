@@ -22,7 +22,7 @@ def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/g
         script_string += generate_table_fields(resource["fields"])
         script_string += generate_primary_key(resource["primary_key"])
         script_string += generate_unique_keys(resource["uniques"])
-        script_string += ')\n'
+        script_string += ');\n\n'
 
     script_string = script_string.replace(',\n)', '\n)')
 

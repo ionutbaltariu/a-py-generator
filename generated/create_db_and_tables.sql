@@ -5,5 +5,5 @@ CREATE TABLE `Books` (
 	`title` varchar(100) NOT NULL, 
 	`year_of_publishing` int(11) NOT NULL, 
 	PRIMARY KEY (`isbn`), 
-	UNIQUE KEY `books_un_1` (`title`, `year_of_publishing`)
+	UNIQUE KEY `books_un_1` (`title`)
 )
