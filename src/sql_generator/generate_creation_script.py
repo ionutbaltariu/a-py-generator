@@ -5,8 +5,9 @@ from pathlib import Path
 def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent
 
+
 datatype_converter = {
-    'string': 'varchar',
+    'string': 'varchar({length})',
     'integer': 'int(11)',
     'decimal': 'double(5, 2)',
     'boolean': 'boolean'
@@ -67,10 +68,11 @@ def create_database_and_use_it(database_name: str = 'generated_db'):
 
 def get_sql_datatype_from_field(field: dict):
     field_type = field["type"]
-    datatype = datatype_converter[field_type]
 
     if field_type == 'string':
-        datatype += f'({field["length"]})'
+        datatype = datatype_converter[field_type].format(length=field["length"])
+    else:
+        datatype = datatype_converter[field_type]
 
     return datatype
 
