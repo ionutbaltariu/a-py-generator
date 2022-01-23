@@ -4,7 +4,7 @@ from pathlib import Path  # hope to move in dedicated module in the future
 
 
 def get_project_root() -> Path:
-    return Path(__file__).parent.parent.parent  # ./../../
+    return Path(__file__).parent.parent.parent.parent  # ./../../
 
 
 datatype_converter = {

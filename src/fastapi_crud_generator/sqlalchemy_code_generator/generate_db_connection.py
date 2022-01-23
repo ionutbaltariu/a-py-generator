@@ -8,7 +8,7 @@ def get_project_root() -> Path:
     """
     Method that can be used to retrieve the project root path.
     """
-    return Path(__file__).parent.parent.parent
+    return Path(__file__).parent.parent.parent.parent
 
 
 class ConnectionConfig:

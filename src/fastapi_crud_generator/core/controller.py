@@ -9,9 +9,9 @@ import sys
 import logging
 
 sys.path.insert(0, '.')
-from src.sql_generator import generate_creation_script
-from src.sqlalchemy_code_generator import generate_db_connection
-from src.sqlalchemy_code_generator import generate_models
+from fastapi_crud_generator.sql_generator import generate_creation_script
+from fastapi_crud_generator.sqlalchemy_code_generator import generate_db_connection
+from fastapi_crud_generator.sqlalchemy_code_generator import generate_models
 
 app = FastAPI()
 logging.basicConfig(filename="fastapi_generator.log", level=logging.INFO, format="%(asctime)s %(message)s")
@@ -28,6 +28,7 @@ def generate(resources: List[Resource]):
         logging.info("Successfully generated the SQL and Python code.")
         return JSONResponse(status_code=200, content={})
     except Exception as e:
+        print(e)
         logging.error("An exception occured")
 
 
