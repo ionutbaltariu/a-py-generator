@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path  # hope to move in dedicated module in the future
 
 
@@ -15,6 +16,11 @@ datatype_converter = {
 
 
 def generate_sqlalchemy_classes(resources: str) -> None:
+    """
+    Orchestrator method that triggers the generation of the SQLAlchemy classes based on the input resources.
+
+    :param resources: Serialized List of resources
+    """
     resources_dict = json.loads(resources)
     for resource in resources_dict:
         sqlalchemy_code = 'import sqlalchemy\n'
@@ -22,11 +28,19 @@ def generate_sqlalchemy_classes(resources: str) -> None:
         sqlalchemy_code += f'class {resource["name"]}(Base):\n'
         sqlalchemy_code += f'\t__tablename__ = \'{resource["table_name"]}\'\n'
         sqlalchemy_code += generate_sqlalechemy_class_fields(resource)
+
         with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as f:
             f.write(sqlalchemy_code)
+            logging.info(f"Successfully generated SQLAlchemy Model class `{resource['name']}`.")
 
 
 def generate_sqlalechemy_class_fields(resource: dict) -> str:
+    """
+    Method that generates the fields of a SQLAlchemy Model class.
+
+    :param resource: Resource in the dictionary format
+    :return: a string(str) representing the equivalent Python code
+    """
     primary_key_field = resource["primary_key"]
     sqlalchemy_code = ''
     # look for another way, this approach is checking at every field
@@ -40,6 +54,13 @@ def generate_sqlalechemy_class_fields(resource: dict) -> str:
 
 
 def generate_class_field_from_resource(field: dict, is_primary_key: bool) -> str:
+    """
+    Method that generates a field based on a dictionary.
+
+    :param field: The field of a resource
+    :param is_primary_key: Boolean that indicates if the field is the primary key or not
+    :return: a string(str) representing the equivalent Python code line
+    """
     tokens = []
 
     if field["type"] == "string":
@@ -57,39 +78,3 @@ def generate_class_field_from_resource(field: dict, is_primary_key: bool) -> str
     generated_field = f'\t{field["name"]} = sqlalchemy.Column({deconstructed_tokens})\n'
 
     return generated_field
-
-
-generate_sqlalchemy_classes(json.dumps([
-    {
-        "name": "Book",
-        "table_name": "Books",
-        "fields": [
-            {
-                "name": "isbn",
-                "type": "string",
-                "length": 100,
-                "nullable": False
-            },
-            {
-                "name": "title",
-                "type": "string",
-                "length": 100,
-                "nullable": False
-            },
-            {
-                "name": "year_of_publishing",
-                "type": "integer",
-                "nullable": False
-            }
-        ],
-        "primary_key": "isbn",
-        "uniques": [
-            {
-                "name": "books_un_1",
-                "unique_fields": [
-                    "title"
-                ]
-            }
-        ]
-    }
-]))
