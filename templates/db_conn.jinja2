@@ -2,12 +2,12 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import create_engine
 Base = declarative_base()
 
-DB_TYPE = {db_type}
-DB_USER = {db_user}
-DB_USER_PASS = {db_user_pass}
-DB_HOST = {db_host}
-DB_PORT = {db_port}
-DB_INSTANCE = {db_instance}
+DB_TYPE = {{cfg.db_type|tojson}}
+DB_USER = {{cfg.db_user|tojson}}
+DB_USER_PASS = {{cfg.db_user_pass|tojson}}
+DB_HOST = {{cfg.db_host|tojson}}
+DB_PORT = {{cfg.db_port|tojson}}
+DB_INSTANCE = {{cfg.db_instance|tojson}}
 
 connection_string = f"{DB_TYPE}://{DB_USER}:{DB_USER_PASS}@{DB_HOST}:{DB_PORT}/{DB_INSTANCE}"
 

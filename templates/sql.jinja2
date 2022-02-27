@@ -1,0 +1,15 @@
+CREATE DATABASE generated_db;
+USE generated_db;
+
+{% for table in tables %}
+CREATE TABLE `{{ table.name }}` (
+{% for field in table.fields -%}
+    `{{ field.name }}` {{ field.type }} {{ field.nullability }},
+{% endfor %}
+{% for unique in table.uniques -%}
+    UNIQUE KEY `{{ unique.name }}` ({% for un_field in unique.unique_fields -%}`{{ un_field }}`{{ ", " if not loop.last else "" }}{% endfor %}),
+{% endfor %}
+PRIMARY KEY (`{{ table.primary_key }}`)
+);
+
+{% endfor %}
