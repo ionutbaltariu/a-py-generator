@@ -58,6 +58,16 @@ def generate_sqlalchemy_classes(resources: str) -> None:
                 gen_f.write(sqlalchemy_code)
                 logging.info(f"Successfully generated SQLAlchemy Model class `{resource['name']}`.")
 
+    # this currently generates "model.py" code for all resources
+    # TODO: think more about code structure
+    with open(f'{get_project_root()}/templates/model.jinja2', 'r') as f:
+        model_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
+        model_code = model_template.render(entities=resources_dict)
+
+        with open(f'{get_project_root()}/generated/model.py', 'w', encoding='utf-8') as gen_f:
+            gen_f.write(model_code)
+            logging.info(f"Successfully generated model code.")
+
 
 def get_attributes_from_field(field: dict, is_primary_key: bool):
     """
@@ -76,7 +86,43 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
     attributes.append("nullable=True" if field["nullable"] is True else "nullable=False")
 
-    if is_primary_key == field["name"]:
+    if is_primary_key:
         attributes.append("primary_key=True")
 
     return attributes
+
+
+generate_sqlalchemy_classes(json.dumps([
+    {
+        "name": "Book",
+        "table_name": "Books",
+        "fields": [
+            {
+                "name": "isbn",
+                "type": "string",
+                "length": 100,
+                "nullable": False
+            },
+            {
+                "name": "title",
+                "type": "string",
+                "length": 100,
+                "nullable": False
+            },
+            {
+                "name": "year_of_publishing",
+                "type": "integer",
+                "nullable": False
+            }
+        ],
+        "primary_key": "isbn",
+        "uniques": [
+            {
+                "name": "books_un_1",
+                "unique_fields": [
+                    "title"
+                ]
+            }
+        ]
+    }
+]))

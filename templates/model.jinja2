@@ -1,0 +1,178 @@
+{% for entity in entities -%}
+    from {{ entity.name }} import {{ entity.name }}
+{% endfor %}
+from db import Session, engine
+
+{% macro generate_getters() %}
+    {% for entity in entities -%}
+def get_{{ entity.name|lower }}_by_{{ entity.primary_key }}({{ entity.primary_key|lower }}):
+    """
+    Wrapper for an ORM call that is retrieving a(n) entity by its {{ entity.primary_key }}.
+    :param {{ entity.primary_key }}: TODO
+    """
+    return get_entity_by_identifier({{ entity.name }}, {{ entity.primary_key|tojson }}, {{ entity.primary_key }})
+
+    {% endfor %}
+{% endmacro %}
+{% macro generate_whole_container_getters() %}
+    {% for entity in entities -%}
+def get_all_{{ entity.table_name|lower }}_with_filters(**kwargs):
+    """
+    Wrapper for an ORM call that is retrieving all {{ entity.table_name|lower }} by {{ entity.primary_key|lower }}
+    :param kwargs: the parameters by which the filters will be made
+    """
+    return get_all_entities({{ entity.name }}, **kwargs)
+    {% endfor %}
+
+{% endmacro %}
+{% macro generate_updaters() %}
+    {% for entity in entities -%}
+def update_{{ entity.name|lower }}({{ entity.primary_key }}, {{ entity.name|lower }}):
+    """
+    Wrapper for an ORM call that updates a(n) {{ entity.name|lower }} in the database.
+    :param {{ entity.primary_key }}: the identifier of the {{ entity.name }}
+    :param {{ entity.name|lower }}: a dictionary containing the fields of the {{ entity.name|lower }} - can be partial
+    """
+    return update_entity_by_identifier({{ entity.name }}, {{ entity.primary_key|tojson }}, {{ entity.primary_key }}, {{ entity.name|lower }})
+    {% endfor %}
+
+{% endmacro %}
+{% macro generate_deleters() %}
+    {% for entity in entities %}
+def delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}({{ entity.primary_key|lower }}):
+    """
+    Wrapper for an ORM call that is deleting a(n) {{ entity.name|lower }} by its {{ entity.primary_key|lower }}.
+    :param {{ entity.primary_key|lower }}: {{ entity.primary_key|lower }} of the {{ entity.name|lower }} that is to be deleted
+    """
+    return delete_entity_by_identifier({{ entity.name }}, {{ entity.primary_key|lower|tojson }}, {{ entity.primary_key|lower }})
+    {% endfor %}
+
+{% endmacro %}
+
+class OperationResponseWrapper:
+    def __init__(self, payload=None, error=None, completed_operation=True):
+        self.payload = payload
+        self.error = error
+        self.completed_operation = completed_operation
+
+
+{# non templated code, this is a generic function that is used so the concrete methods can be bound to it #}
+def get_all_entities(entity, **kwargs):
+    """
+    Wrapper for a generic ORM call that is retrieving all instances of
+    any entity also using some filter parameters.
+    :param entity: the type of the entity that is to be retrieved
+    :param kwargs: the parameters by which the filters will be made
+    """
+    with Session(bind=engine) as session:
+        response = OperationResponseWrapper()
+
+        try:
+            response.payload = session.query(entity).filter_by(**kwargs).all()
+            response.completed_operation = True
+        except Exception as e:
+            session.rollback()
+            response.error = e
+            response.completed_operation = False
+
+        return response
+
+
+{# non templated code, this is a generic function that is used so the concrete methods can be bound to it #}
+def get_entity_by_identifier(entity, identifier_name, identifier_value):
+    """
+    Wrapper for a generic ORM call that is retrieving an Entity by an identifier.
+    :param entity: the type of the entity that is to be retrieved
+    :param identifier_name: the column/field by which the identifier will be searched
+    :param identifier_value: the value of the identifier column
+    """
+    with Session(bind=engine) as session:
+        response = OperationResponseWrapper()
+
+        try:
+            response.payload = session\
+                .query(entity)\
+                .filter(getattr(entity, identifier_name) == identifier_value)\
+                .first()
+            if not response.payload:
+                response.completed_operation = False
+            else:
+                response.completed_operation = True
+        except Exception as e:
+            session.rollback()
+            response.error = e
+            response.completed_operation = False
+
+        return response
+
+
+{# non templated code, this is a generic function that is used so the concrete methods can be bound to it #}
+def delete_entity_by_identifier(entity, identifier_name, identifier_value):
+    """
+    Wrapper for a generic ORM call that is deleting an Entity by an identifier.
+    :param entity: the type of the entity that is to be deleted
+    :param identifier_name: the column/field by which the identifier will be searched and deleted
+    :param identifier_value: the value of the identifier column
+    """
+    with Session(bind=engine) as session:
+        response = OperationResponseWrapper()
+
+        try:
+            entity_to_delete = session\
+                .query(entity)\
+                .filter(getattr(entity, identifier_name) == identifier_value)\
+                .first()
+
+            if entity_to_delete:
+                session.delete(entity_to_delete)
+                session.commit()
+            else:
+                response.completed_operation = False
+
+        except Exception as e:
+            session.rollback()
+            response.completed_operation = False
+            response.error = e
+
+        return response
+
+
+def update_entity_by_identifier(entity, identifier_name, identifier_value, updated_entity_fields):
+    """
+    Wrapper for a generic ORM call that is updating an Entity by an identifier.
+    :param entity: the type of the entity that is to be updated
+    :param identifier_name: the column/field by which the identifier will be searched
+    :param identifier_value: the value of the identifier column
+    :param updated_entity_fields: a dictionary that contains the new values of the entity
+    """
+    with Session(bind=engine) as session:
+        response = OperationResponseWrapper()
+
+        try:
+            entity_to_update = session\
+                .query(entity)\
+                .filter(getattr(entity, identifier_name) == identifier_value)\
+                .first()
+
+            if entity_to_update:
+                for field in updated_entity_fields:
+                    setattr(entity_to_update, field, updated_entity_fields[field])
+
+                session.add(entity_to_update)
+                session.commit()
+                response.completed_operation = True
+                response.payload = entity_to_update
+            else:
+                response.completed_operation = False
+        except Exception as e:
+            session.rollback()
+            response.completed_operation = False
+            response.error = e
+
+        return
+
+
+{{ generate_getters() }}
+{{ generate_whole_container_getters() }}
+{{ generate_updaters() }}
+{{ generate_deleters() }}
