@@ -1,0 +1,12 @@
+import sqlalchemy
+from db import Base
+
+
+class {{ resource.name }}(Base):
+    __tablename__ = {{resource.table_name|tojson}}
+    {% macro gen_fields() %}
+        {% for field in resource.fields -%}
+            {{ field.name }} = sqlalchemy.Column({% for attribute in field.attributes -%}{{ attribute }}{{ ", " if not loop.last else "" }}{% endfor %})
+        {% endfor %}
+    {% endmacro %}
+    {{ gen_fields()|indent(width=4, first=False) }}

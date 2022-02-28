@@ -1,6 +1,9 @@
 import json
 import logging
 from pathlib import Path  # hope to move in dedicated module in the future
+from dataclasses import dataclass
+from typing import List
+from jinja2 import Template
 
 
 def get_project_root() -> Path:
@@ -15,6 +18,19 @@ datatype_converter = {
 }
 
 
+@dataclass
+class Field:
+    name: str
+    attributes: List[str]
+
+
+@dataclass
+class Resource:
+    name: str
+    table_name: str
+    fields: List[Field]
+
+
 def generate_sqlalchemy_classes(resources: str) -> None:
     """
     Orchestrator method that triggers the generation of the SQLAlchemy classes based on the input resources.
@@ -22,59 +38,45 @@ def generate_sqlalchemy_classes(resources: str) -> None:
     :param resources: Serialized List of resources
     """
     resources_dict = json.loads(resources)
-    for resource in resources_dict:
-        sqlalchemy_code = 'import sqlalchemy\n'
-        sqlalchemy_code += 'from db import Base\n\n\n'
-        sqlalchemy_code += f'class {resource["name"]}(Base):\n'
-        sqlalchemy_code += f'\t__tablename__ = \'{resource["table_name"]}\'\n'
-        sqlalchemy_code += generate_sqlalechemy_class_fields(resource)
 
-        with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as f:
-            f.write(sqlalchemy_code)
-            logging.info(f"Successfully generated SQLAlchemy Model class `{resource['name']}`.")
+    with open(f'{get_project_root()}/templates/sqlalchemy_model.jinja2', 'r') as f:
+        sqlalchemy_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
+
+        for resource in resources_dict:
+            fields = []
+            for field in resource["fields"]:
+                fields.append(Field(field["name"], get_attributes_from_field(field,
+                                                                             (field["name"] == resource["primary_key"])
+                                                                             )
+                                    ))
+
+            sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
+                                                                           resource["table_name"],
+                                                                           fields))
+
+            with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as gen_f:
+                gen_f.write(sqlalchemy_code)
+                logging.info(f"Successfully generated SQLAlchemy Model class `{resource['name']}`.")
 
 
-def generate_sqlalechemy_class_fields(resource: dict) -> str:
+def get_attributes_from_field(field: dict, is_primary_key: bool):
     """
-    Method that generates the fields of a SQLAlchemy Model class.
+    Function used to get the list of attributes from a field so they can be persisted in the sqlalchemy.Column
 
-    :param resource: Resource in the dictionary format
-    :return: a string(str) representing the equivalent Python code
+    :param field: dictionary that holds field related properties
+    :param is_primary_key: boolean that indicates whether the field is a primary key or not
+    :return: a list of strings containing the raw attributes
     """
-    primary_key_field = resource["primary_key"]
-    sqlalchemy_code = ''
-    # look for another way, this approach is checking at every field
-    for field in resource["fields"]:
-        is_primary_key = (primary_key_field == field["name"])
-        sqlalchemy_code += generate_class_field_from_resource(field, is_primary_key)
-
-    sqlalchemy_code += '\n\n'
-
-    return sqlalchemy_code
-
-
-def generate_class_field_from_resource(field: dict, is_primary_key: bool) -> str:
-    """
-    Method that generates a field based on a dictionary.
-
-    :param field: The field of a resource
-    :param is_primary_key: Boolean that indicates if the field is the primary key or not
-    :return: a string(str) representing the equivalent Python code line
-    """
-    tokens = []
+    attributes = []
 
     if field["type"] == "string":
-        tokens.append(f'{datatype_converter["string"]}({field["length"]})')
+        attributes.append(f'{datatype_converter["string"]}({field["length"]})')
     else:
-        tokens.append(datatype_converter[field["type"]])
+        attributes.append(datatype_converter[field["type"]])
 
-    tokens.append('nullable=True' if field["nullable"] is True else 'nullable=False')
+    attributes.append("nullable=True" if field["nullable"] is True else "nullable=False")
 
-    if is_primary_key:
-        tokens.append('primary_key=True')
+    if is_primary_key == field["name"]:
+        attributes.append("primary_key=True")
 
-    deconstructed_tokens = ', '.join(tokens)
-
-    generated_field = f'\t{field["name"]} = sqlalchemy.Column({deconstructed_tokens})\n'
-
-    return generated_field
+    return attributes
