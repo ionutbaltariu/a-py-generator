@@ -10,7 +10,6 @@ class {{ resource.name }}(HyperModel):
         {% endfor %}
     {% endmacro %}
     {{ gen_fields()|indent(width=4, first=False) }}
-
     links = LinkSet(
         {
             "self": HALFor("get_{{ resource.name|lower }}", { {{resource.primary_key|lower|tojson}}: "<{{resource.primary_key|lower}}>"}, "Get the {{resource.name|lower}}"),
