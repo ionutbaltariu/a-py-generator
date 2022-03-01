@@ -17,6 +17,13 @@ datatype_converter = {
     'boolean': 'sqlalchemy.Boolean'
 }
 
+pseudocode_to_pydantic = {
+    'string': 'constr(min_length=1, max_length={length})',
+    'integer': 'int',
+    'decimal': 'float',
+    'boolean': 'bool'
+}
+
 
 @dataclass
 class Field:
@@ -31,14 +38,55 @@ class Resource:
     fields: List[Field]
 
 
-def generate_sqlalchemy_classes(resources: str) -> None:
+@dataclass
+class PydanticField:
+    name: str
+    type: str
+
+
+@dataclass
+class PydanticResource:
+    name: str
+    primary_key: str
+    fields: List[PydanticField]
+
+
+def generate_infrastructure(resources: str) -> None:
     """
-    Orchestrator method that triggers the generation of the SQLAlchemy classes based on the input resources.
+    Orchestrator method that triggers the generation of all code.
 
     :param resources: Serialized List of resources
     """
     resources_dict = json.loads(resources)
 
+    generate_sqlalchemy_classes(resources_dict)
+    generator_model_code(resources_dict)
+    generate_pydantic_models(resources_dict)
+
+
+def generate_pydantic_models(resources_dict: dict) -> None:
+    with open(f'{get_project_root()}/templates/pydantic.jinja2', 'r') as f:
+        pydantic_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
+        resources = []
+        for resource in resources_dict:
+            fields = []
+            for field in resource["fields"]:
+                if field["type"] == "string":
+                    field_type = pseudocode_to_pydantic["string"].format(length=field["length"])
+                else:
+                    field_type = pseudocode_to_pydantic[field["type"]]
+
+                fields.append(PydanticField(field["name"], field_type))
+            resources.append(PydanticResource(resource["name"], resource["primary_key"], fields))
+
+        pydantic_code = pydantic_template.render(resources=resources)
+
+        with open(f'{get_project_root()}/generated/view.py', 'w', encoding='utf-8') as gen_f:
+            gen_f.write(pydantic_code)
+            logging.info(f"Successfully generated pydantic models.")
+
+
+def generate_sqlalchemy_classes(resources_dict: dict) -> None:
     with open(f'{get_project_root()}/templates/sqlalchemy_model.jinja2', 'r') as f:
         sqlalchemy_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
 
@@ -58,8 +106,12 @@ def generate_sqlalchemy_classes(resources: str) -> None:
                 gen_f.write(sqlalchemy_code)
                 logging.info(f"Successfully generated SQLAlchemy Model class `{resource['name']}`.")
 
-    # this currently generates "model.py" code for all resources
-    # TODO: think more about code structure
+
+def generator_model_code(resources_dict: dict) -> None:
+    """
+    Method that triggers the 'model.py' code generation - file contains code that's use to perform database operations
+    :param resources_dict: dictionary that contains the input resources
+    """
     with open(f'{get_project_root()}/templates/model.jinja2', 'r') as f:
         model_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
         model_code = model_template.render(entities=resources_dict)
@@ -91,38 +143,3 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
     return attributes
 
-
-generate_sqlalchemy_classes(json.dumps([
-    {
-        "name": "Book",
-        "table_name": "Books",
-        "fields": [
-            {
-                "name": "isbn",
-                "type": "string",
-                "length": 100,
-                "nullable": False
-            },
-            {
-                "name": "title",
-                "type": "string",
-                "length": 100,
-                "nullable": False
-            },
-            {
-                "name": "year_of_publishing",
-                "type": "integer",
-                "nullable": False
-            }
-        ],
-        "primary_key": "isbn",
-        "uniques": [
-            {
-                "name": "books_un_1",
-                "unique_fields": [
-                    "title"
-                ]
-            }
-        ]
-    }
-]))
