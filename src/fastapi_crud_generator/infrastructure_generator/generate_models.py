@@ -65,7 +65,6 @@ def generate_infrastructure(resources: str) -> None:
 
 
 def generate_pydantic_models(resources_dict: dict) -> None:
-
     resources = []
     for resource in resources_dict:
         fields = []

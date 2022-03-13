@@ -1,5 +1,5 @@
 from fastapi_hypermodel import HyperModel, LinkSet, HALFor
-from pydantic import constr
+from pydantic import constr, BaseModel
 
 
 {% for resource in resources -%}
@@ -17,3 +17,8 @@ class {{ resource.name }}(HyperModel):
     )
 
 {% endfor %}
+
+class Error(BaseModel):
+    error_code: int
+    error_source: str
+    error_reason: str
