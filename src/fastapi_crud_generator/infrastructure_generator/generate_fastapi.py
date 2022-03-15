@@ -1,7 +1,6 @@
 from jinja2 import Template
 from pathlib import Path  # hope to move in dedicated module in the future
 from typing import List
-import json
 import logging
 import os
 
@@ -18,11 +17,11 @@ def create_routers_folder(path: str):
     Path(f"{GENERATED_PATH}/routers/__init__.py").touch()
 
 
-def create_utils_file():
+def create_utils_file(resources: List[dict]):
     with open(f'{get_project_root()}/templates/utils.jinja2', 'r') as f:
         utils_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
         with open(f'{get_project_root()}/generated/utils.py', 'w', encoding='utf-8') as gen_f:
-            gen_f.write(utils_template.render())
+            gen_f.write(utils_template.render(resources=resources))
             logging.info(f"Successfully generated utils file.")
 
 
@@ -47,7 +46,7 @@ def create_main_app(resources: List[dict]):
 
 def generate_fastapi_code(resources):
     # create_routers_folder(GENERATED_PATH)
-    create_utils_file()
+    create_utils_file(resources)
     # TODO: add errors for each entity (replace in jinja template as well)
     create_routers(resources)
     create_main_app(resources)

@@ -48,6 +48,17 @@ def delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}({{ entity.p
     {% endfor %}
 
 {% endmacro %}
+{% macro generate_inserters() %}
+    {% for entity in entities %}
+def insert_{{ entity.name|lower }}(**kwargs):
+    """
+    Wrapper for an ORM call that is creating a(n) {{ entity.name|lower }}.
+    :param kwargs: the attributes of the {{ entity.name }} that is to be created
+    """
+    return insert_entity({{ entity.name }}, **kwargs)
+    {% endfor %}
+
+{% endmacro %}
 
 class OperationResponseWrapper:
     def __init__(self, payload=None, error=None, completed_operation=True):
@@ -169,10 +180,33 @@ def update_entity_by_identifier(entity, identifier_name, identifier_value, updat
             response.completed_operation = False
             response.error = e
 
-        return
+        return response
+
+def insert_entity(entity, **kwargs):
+    """
+    Wrapper for an ORM call that inserts a book into the database.
+    :param entity: the type of the entity
+    :param kwargs: the attributes of the entity
+    """
+    with Session(bind=engine) as session:
+        response = OperationResponseWrapper()
+
+        entity_to_insert = entity(**kwargs)
+        try:
+            session.add(entity_to_insert)
+            session.commit()
+            response.completed_operation = True
+            response.payload = entity_to_insert
+        except Exception as e:
+            session.rollback()
+            response.completed_operation = False
+            response.error = e
+
+        return response
 
 
 {{ generate_getters() }}
 {{ generate_whole_container_getters() }}
 {{ generate_updaters() }}
 {{ generate_deleters() }}
+{{ generate_inserters() }}
