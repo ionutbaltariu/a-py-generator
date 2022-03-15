@@ -13,8 +13,8 @@ def get_project_root() -> Path:
 
 
 class ConnectionConfig:
-    def __init__(self, db_type='mysql+mysqlconnector', db_user='user', db_user_pass='pass', db_host='db',
-                 db_port=3306, db_instance='generic_db_name'):
+    def __init__(self, db_type='mysql+mysqlconnector', db_user='root', db_user_pass='password', db_host='localhost',
+                 db_port=3306, db_instance='generated_db'):
         self.db_type = db_type
         self.db_user = db_user
         self.db_user_pass = db_user_pass

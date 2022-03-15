@@ -81,8 +81,9 @@ def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/g
         for field in resource['fields']:
             temp_fields.append(Field(field))
 
-        for unique in resource['uniques']:
-            temp_uniques.append(Unique(**unique))
+        if 'uniques' in resource:
+            for unique in resource['uniques']:
+                temp_uniques.append(Unique(**unique))
 
         tables_to_be_created.append(Table(name=resource['table_name'],
                                           fields=temp_fields,

@@ -16,6 +16,9 @@ class {{ resource.name }}(HyperModel):
         }
     )
 
+    class Config:
+        orm_mode = True
+
 {% endfor %}
 
 class Error(BaseModel):

@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  mariadb:
+    image: mariadb
+    container_name: 'generated_app'
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+
+    volumes:
+      - ./:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
