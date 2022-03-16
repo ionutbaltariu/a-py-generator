@@ -37,7 +37,7 @@
         "table_name": "authors",
         "fields": [
             {
-                "name": "id",
+                "name": "author_id",
                 "type": "integer",
                 "nullable": False
             },
@@ -54,6 +54,6 @@
                 "nullable": False
             }
         ],
-        "primary_key": "id"
+        "primary_key": "author_id"
     }
 ]

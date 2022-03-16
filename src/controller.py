@@ -7,9 +7,7 @@ from view import Resource
 import json
 import logging
 
-from sql_generator import generate_creation_script
-from infrastructure_generator import generate_db_connection
-from infrastructure_generator import generate_models
+from src import generate_db_connection, generate_models, generate_creation_script
 
 app = FastAPI()
 logging.basicConfig(filename="fastapi_generator.log", level=logging.INFO, format="%(asctime)s %(message)s")

@@ -1,13 +1,9 @@
 from jinja2 import Template
-from pathlib import Path  # hope to move in dedicated module in the future
+from pathlib import Path
+from utils import get_project_root
 from typing import List
 import logging
 import os
-
-
-def get_project_root() -> Path:
-    return Path(__file__).parent.parent.parent.parent  # ./../../
-
 
 GENERATED_PATH = f"{get_project_root()}/generated"
 

@@ -1,4 +1,12 @@
-[
+import json
+from generate_db_connection import generate_connection
+from generate_creation_script import generate_db_create_code
+from generate_docker_files import generate_docker_compose
+from generate_models import generate_infrastructure
+from generate_fastapi import generate_fastapi_code
+
+
+resources = [
     {
         "name": "Book",
         "table_name": "Books",
@@ -7,18 +15,18 @@
                 "name": "isbn",
                 "type": "string",
                 "length": 100,
-                "nullable": false
+                "nullable": False
             },
             {
                 "name": "title",
                 "type": "string",
                 "length": 100,
-                "nullable": false
+                "nullable": False
             },
             {
                 "name": "year_of_publishing",
                 "type": "integer",
-                "nullable": false
+                "nullable": False
             }
         ],
         "primary_key": "isbn",
@@ -39,21 +47,29 @@
             {
                 "name": "author_id",
                 "type": "integer",
-                "nullable": false
+                "nullable": False
             },
             {
                 "name": "first_name",
                 "type": "string",
                 "length": 100,
-                "nullable": false
+                "nullable": False
             },
             {
                 "name": "last_name",
                 "type": "string",
                 "length": 100,
-                "nullable": false
+                "nullable": False
             }
         ],
         "primary_key": "author_id"
     }
 ]
+
+
+if __name__ == "__main__":
+    generate_connection()
+    generate_db_create_code(json.dumps(resources))
+    generate_docker_compose()
+    generate_infrastructure(json.dumps(resources))
+    generate_fastapi_code(resources)

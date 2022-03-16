@@ -1,15 +1,8 @@
-from pathlib import Path  # hope to move in dedicated module in the future
+from utils import get_project_root
 import logging
 from jinja2 import Template
 
 PLACEHOLDERS = ['db_type', 'db_user', 'db_user_pass', 'db_host', 'db_port', 'db_instance']
-
-
-def get_project_root() -> Path:
-    """
-    Method that can be used to retrieve the project root path.
-    """
-    return Path(__file__).parent.parent.parent.parent
 
 
 class ConnectionConfig:
