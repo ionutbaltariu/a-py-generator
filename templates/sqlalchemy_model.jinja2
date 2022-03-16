@@ -1,12 +1,20 @@
 import sqlalchemy
 from db import Base
 
+{% macro gen_fields() -%}
+    {%- for field in resource.fields -%}
+        {{ field.name }} = sqlalchemy.Column({% for attribute in field.attributes -%}{{ attribute }}{{ ", " if not loop.last else "" }}{% endfor %})
+    {% endfor %}
+{% endmacro %}
+{% macro gen_uniques() %}
+    {%- for unique in resource.uniques -%}
+        sqlalchemy.UniqueConstraint({% for field in unique.unique_fields -%}{{ field|tojson }}, {% endfor %} name={{ unique.name|tojson }})
+    {% endfor %}
+{% endmacro %}
 
 class {{ resource.name }}(Base):
     __tablename__ = {{resource.table_name|tojson}}
-    {% macro gen_fields() %}
-        {% for field in resource.fields -%}
-            {{ field.name }} = sqlalchemy.Column({% for attribute in field.attributes -%}{{ attribute }}{{ ", " if not loop.last else "" }}{% endfor %})
-        {% endfor %}
-    {% endmacro %}
     {{ gen_fields()|indent(width=4, first=False) }}
+    {%- if resource.uniques %}
+    {{ gen_uniques()|indent(width=4, first=False) }}
+    {% endif %}

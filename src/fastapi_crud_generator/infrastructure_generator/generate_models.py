@@ -32,10 +32,17 @@ class Field:
 
 
 @dataclass
+class Unique:
+    name: str
+    unique_fields: List[str]
+
+
+@dataclass
 class Resource:
     name: str
     table_name: str
     fields: List[Field]
+    uniques: List[Unique]
 
 
 @dataclass
@@ -93,14 +100,15 @@ def generate_sqlalchemy_classes(resources_dict: dict) -> None:
         for resource in resources_dict:
             fields = []
             for field in resource["fields"]:
-                fields.append(Field(field["name"], get_attributes_from_field(field,
-                                                                             (field["name"] == resource["primary_key"])
-                                                                             )
-                                    ))
+                fields.append(Field(field["name"],
+                                    get_attributes_from_field(field, (field["name"] == resource["primary_key"]))))
+
+            uniques = resource["uniques"] if "uniques" in resource else None
 
             sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
                                                                            resource["table_name"],
-                                                                           fields))
+                                                                           fields,
+                                                                           uniques))
 
             with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as gen_f:
                 gen_f.write(sqlalchemy_code)
