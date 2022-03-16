@@ -18,3 +18,4 @@ test:
     - python3 -m unittest discover ./src/
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
