@@ -75,8 +75,7 @@ def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/g
 
         for field in resource['fields']:
             temp_fields.append(Field(field))
-
-        if 'uniques' in resource:
+        if 'uniques' in resource and resource['uniques'] is not None:
             for unique in resource['uniques']:
                 temp_uniques.append(Unique(**unique))
 

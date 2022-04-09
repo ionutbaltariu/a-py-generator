@@ -4,7 +4,7 @@ from generate_creation_script import generate_db_create_code
 from generate_docker_files import generate_docker_compose
 from generate_models import generate_infrastructure
 from generate_fastapi import generate_fastapi_code
-
+from view import Resource, Resources
 
 resources = [
     {
@@ -30,6 +30,12 @@ resources = [
             }
         ],
         "primary_key": "isbn",
+        "relationships": [
+            {
+                "type": "MANY-TO-MANY",
+                "table": "authors"
+            }
+        ],
         "uniques": [
             {
                 "name": "books_un_1",
@@ -62,12 +68,16 @@ resources = [
                 "nullable": False
             }
         ],
-        "primary_key": "author_id"
+        "primary_key": "author_id",
     }
 ]
 
 
 if __name__ == "__main__":
+    res = {"resources": resources}
+    shapeshift_resources = Resources(**res).resources
+    resources = [resource.dict() for resource in shapeshift_resources]
+
     generate_connection()
     generate_db_create_code(json.dumps(resources))
     generate_docker_compose()
