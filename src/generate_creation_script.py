@@ -51,11 +51,19 @@ class Unique:
 
 
 @dataclass
+class ForeignKey:
+    field: str
+    references: str
+    reference_field: str
+
+
+@dataclass
 class Table:
     name: str
     fields: List[Field]
     uniques: List[Unique]
     primary_key: str
+    foreign_keys: List[ForeignKey]
 
 
 def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/generated/') -> None:
@@ -72,16 +80,20 @@ def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/g
     for resource in resources_dict:
         temp_fields = []
         temp_uniques = []
+        temp_fks = []
 
         for field in resource['fields']:
             temp_fields.append(Field(field))
         if 'uniques' in resource and resource['uniques'] is not None:
-            for unique in resource['uniques']:
-                temp_uniques.append(Unique(**unique))
+            temp_uniques = [Unique(**unique) for unique in resource['uniques']]
+
+        if 'foreign_keys' in resource and resource['foreign_keys'] is not None:
+            temp_fks = [ForeignKey(**foreign_key) for foreign_key in resource['foreign_keys']]
 
         tables_to_be_created.append(Table(name=resource['table_name'],
                                           fields=temp_fields,
                                           uniques=temp_uniques,
+                                          foreign_keys=temp_fks,
                                           primary_key=resource['primary_key']))
 
     with open(f'{get_project_root()}/templates/sql.jinja2', 'r') as f:

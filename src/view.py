@@ -26,6 +26,7 @@ class Relationship(BaseModel):
 class ForeignKey(BaseModel):
     field: constr(min_length=1, max_length=64)
     references: constr(min_length=1, max_length=64)
+    reference_field: constr(min_length=1, max_length=64)
 
 
 class Resource(BaseModel):
@@ -82,7 +83,7 @@ class Resource(BaseModel):
         return v
 
 
-class Resources(BaseModel):
+class Input(BaseModel):
     resources: List[Resource]
 
     @validator('resources')
@@ -115,29 +116,44 @@ class Resources(BaseModel):
         except networkx.exception.NetworkXNoCycle:
             # there were no cycles and the list of resources can be updated to contain the new foreign keys and eventual
             # link tables (many-to-many)
+            # TODO: idea: use factory pattern to handle actions based on relationship type
             for table1, table2, weight in relationships.edges(data=True):
                 rel_type = weight["weight"]
                 table1 = list(filter(lambda x: x.table_name == table1, v))[0]
                 table2 = list(filter(lambda x: x.table_name == table2, v))[0]
 
                 if rel_type == "MANY-TO-MANY":
-                    fields = [Field(name=f"{table1.primary_key}", type="integer", nullable=False),
+                    fields = [Field(name=f"id", type="integer", nullable=False),
+                              Field(name=f"{table1.primary_key}", type="integer", nullable=False),
                               Field(name=f"{table2.primary_key}", type="integer", nullable=False)]
                     table_name = f"{table1.table_name}_{table2.table_name}"
                     # TODO: when support for composite primary keys will be added, also change here
-                    v.append(
-                        Resource(name=table_name, table_name=table_name, fields=fields, primary_key=table1.primary_key))
-                elif rel_type == "ONE_TO_ONE" or rel_type == "MANY_TO_ONE":
-                    fk = ForeignKey(field=f"{table2.table_name}_fk", references=table2.primary_key)
-                    if table1.foreign_keys:
-                        table1.foreign_keys.append(fk)
-                    else:
-                        table1.foreign_keys = [fk]
+                    link_table = Resource(name=table_name, table_name=table_name, fields=fields, primary_key="id")
+                    v.append(link_table)
+                    create_fk(link_table, table1, fields[1].name)
+                    create_fk(link_table, table2, fields[2].name)
+                elif rel_type == "ONE-TO-ONE":
+                    create_fk(master=table1, slave=table2)
+                    if not table1.uniques:
+                        table1.uniques = []
+                    table1.uniques.append(Unique(name='one_to_one_constr', unique_fields=[f"{table2.table_name}_fk"]))
+                elif rel_type == "MANY-TO-ONE":
+                    create_fk(master=table1, slave=table2)
                 else:
-                    fk = ForeignKey(field=f"{table1.table_name}_fk", references=table1.primary_key)
-                    if table2.foreign_keys:
-                        table2.foreign_keys.append(fk)
-                    else:
-                        table2.foreign_keys = [fk]
+                    create_fk(master=table2, slave=table1)
 
         return v
+
+
+def create_fk(master, slave, already_existent_field=None):
+    fk_name = f"{slave.table_name}_fk" if not already_existent_field else already_existent_field
+    fk = ForeignKey(field=fk_name, references=slave.table_name, reference_field=slave.primary_key)
+
+    if not already_existent_field:
+        fk_field = Field(name=f"{slave.table_name}_fk", type="integer", nullable=False)
+        master.fields.append(fk_field)
+
+    if not master.foreign_keys:
+        master.foreign_keys = []
+
+    master.foreign_keys.append(fk)
