@@ -2,8 +2,22 @@ import networkx.exception
 from pydantic import BaseModel, constr, validator
 from typing import List, Optional, Literal
 from networkx import DiGraph, find_cycle
+from keyword import iskeyword
 
-ONLY_ALPHA_ERR = '{} must ony contain alphabet characters.'
+
+def generic_alphanumeric_validator(element: str, element_name: str) -> None:
+    if not element.replace('_', '').isalnum():
+        raise ValueError(f"A(n) {element_name} can only contain alphabetic characters and '_'.")
+
+
+def generic_keyword_verifier(element: str, element_name: str) -> None:
+    if iskeyword(element):
+        raise ValueError(f"A(n) {element_name}  cannot be equivalent to a Python keyword.")
+
+
+def generic_alphanumeric_and_keyword_validator(element: str, element_name: str) -> None:
+    generic_keyword_verifier(element, element_name)
+    generic_alphanumeric_validator(element, element_name)
 
 
 class Field(BaseModel):
@@ -11,6 +25,11 @@ class Field(BaseModel):
     type: constr(min_length=1, max_length=64)
     length: Optional[int]
     nullable: bool
+
+    @validator('name')
+    def name_alpha_and_not_keyword(cls, v):
+        generic_alphanumeric_and_keyword_validator(v, 'field name')
+        return v
 
 
 class Unique(BaseModel):
@@ -40,28 +59,19 @@ class Resource(BaseModel):
 
     @validator('name')
     def resource_name_must_be_pure_string(cls, v):
-        if not v.replace('_', '').isalpha():
-            raise ValueError(ONLY_ALPHA_ERR.format("Resource name"))
+        generic_alphanumeric_and_keyword_validator(v, 'resource name')
         return v
 
     @validator('table_name')
     def table_name_must_be_pure_string(cls, v):
-        if not v.replace('_', '').isalpha():
-            raise ValueError(ONLY_ALPHA_ERR.format("Table name"))
+        generic_alphanumeric_and_keyword_validator(v, 'table name')
         return v
-
-    # @validator('fields', pre=True)
-    # def field_name_must_be_pure_string(cls, v):
-    #     fieldnames = [field["name"] for field in v]
-    #     print(fieldnames)
-    #     for fieldname in fieldnames:
-    #         if not fieldname.replace('_', '').isalpha():
-    #             print('was here')
-    #             raise ValueError("A field's name can only contain alphabetic characters and '_'.")
-    #     return v
 
     @validator('primary_key')
     def primary_key_must_be_in_fields(cls, v, values):
+        if "fields" not in values:
+            return
+
         fieldnames = [field.name for field in values["fields"]]
 
         if v not in fieldnames:
@@ -70,12 +80,13 @@ class Resource(BaseModel):
 
     @validator('uniques')
     def unique_keys_must_be_in_fields(cls, v, values):
+        if "fields" not in values:
+            return
+
         fieldnames = [field.name for field in values["fields"]]
 
         for unique_constr in v:
-            if not unique_constr.name.replace('_', '').isalnum():
-                raise ValueError(
-                    "The unique constraint name can only contain alphanumeric characters, numbers and '_'.")
+            generic_alphanumeric_validator(unique_constr.name, 'unique constraint name')
             for unique_field in unique_constr.unique_fields:
                 if unique_field not in fieldnames:
                     raise ValueError(f"Unique `{unique_constr.name}` contains a field that was not declared:"
@@ -145,6 +156,7 @@ class Input(BaseModel):
         return v
 
 
+# theoretically bad design, changing variables passed by reference.. there should be another way
 def create_fk(master, slave, already_existent_field=None):
     fk_name = f"{slave.table_name}_fk" if not already_existent_field else already_existent_field
     fk = ForeignKey(field=fk_name, references=slave.table_name, reference_field=slave.primary_key)

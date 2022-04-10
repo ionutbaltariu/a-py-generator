@@ -1,6 +1,6 @@
 import json
 from generate_db_connection import generate_connection
-from generate_creation_script import generate_db_create_code
+from generate_sql import generate_db_create_code
 from generate_docker_files import generate_docker_compose
 from generate_models import generate_infrastructure
 from generate_fastapi import generate_fastapi_code
