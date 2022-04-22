@@ -1,10 +1,6 @@
 import logging
 from jinja2 import Template
-from pathlib import Path
-
-
-def get_project_root() -> Path:
-    return Path(__file__).parent.parent.parent.parent  # ./../../
+from utils import get_project_root
 
 
 def generate_docker_compose():

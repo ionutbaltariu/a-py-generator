@@ -13,3 +13,9 @@ PRIMARY KEY (`{{ table.primary_key }}`)
 );
 
 {% endfor %}
+
+{% for table in tables %}
+{% for foreign_key in table.foreign_keys %}
+ALTER TABLE `{{ table.name }}` ADD CONSTRAINT FOREIGN KEY (`{{ foreign_key.field }}`) REFERENCES `{{ foreign_key.references }}` (`{{ foreign_key.reference_field }}`);
+{% endfor %}
+{% endfor %}

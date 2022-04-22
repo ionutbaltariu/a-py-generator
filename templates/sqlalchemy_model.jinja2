@@ -16,5 +16,5 @@ class {{ resource.name }}(Base):
     __tablename__ = {{resource.table_name|tojson}}
     {{ gen_fields()|indent(width=4, first=False) }}
     {%- if resource.uniques %}
-    {{ gen_uniques()|indent(width=4, first=False) }}
+    {{ gen_uniques()|indent(width=4, first=False) -}}
     {% endif %}
