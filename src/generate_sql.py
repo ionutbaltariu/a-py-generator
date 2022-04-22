@@ -66,7 +66,7 @@ class Table:
     foreign_keys: List[ForeignKey]
 
 
-def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/generated/') -> None:
+def generate_db_create_code(resources: List[dict], path: str = f'{get_project_root()}/generated/') -> None:
     """
     Method that generates SQL code based on a given List of resources.
 
@@ -74,10 +74,9 @@ def generate_db_create_code(resources: str, path: str = f'{get_project_root()}/g
     :param path: [out] The path in which the code will be generated.
     """
     logging.info(f"Entered {generate_db_create_code.__name__}")
-    resources_dict = json.loads(resources)
     tables_to_be_created = []
 
-    for resource in resources_dict:
+    for resource in resources:
         temp_fields = []
         temp_uniques = []
         temp_fks = []

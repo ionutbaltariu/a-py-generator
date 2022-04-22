@@ -1,9 +1,10 @@
-import json
 from generate_db_connection import generate_connection
 from generate_sql import generate_db_create_code
 from generate_docker_files import generate_docker_compose
-from generate_models import generate_infrastructure
+from generate_pydantic import generate_pydantic_models
 from generate_fastapi import generate_fastapi_code
+from generate_sqlalchemy_models import generate_sqlalchemy_classes
+from generate_model_code import generate_model_code
 from view import Input
 
 resources = [
@@ -64,7 +65,7 @@ resources = [
         ],
         "relationships": [
             {
-                "type": "ONE-TO-MANY",
+                "type": "ONE-TO-ONE",
                 "table": "Books",
                 "reference_field": "author_id"
             }
@@ -77,10 +78,11 @@ if __name__ == "__main__":
     res = {"resources": resources}
     shapeshift_resources = Input(**res).resources
     resources = [resource.dict() for resource in shapeshift_resources]
-    print(resources)
     # TODO: chain of responsibility
     generate_connection()
-    generate_db_create_code(json.dumps(resources))
+    generate_db_create_code(resources)
     generate_docker_compose()
-    generate_infrastructure(json.dumps(resources))
+    generate_pydantic_models(resources)
+    generate_sqlalchemy_classes(resources)
+    generate_model_code(resources)
     generate_fastapi_code(resources)
