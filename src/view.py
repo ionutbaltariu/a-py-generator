@@ -38,8 +38,9 @@ class Unique(BaseModel):
 
 
 class Relationship(BaseModel):
-    type: Literal["ONE-TO-ONE", "ONE-TO-MANY", "MANY-TO-ONE", "MANY-TO-MANY"]
+    type: Literal["ONE-TO-ONE", "ONE-TO-MANY", "MANY-TO-MANY"]
     table: str
+    reference_field: Optional[str]
 
 
 class ForeignKey(BaseModel):
@@ -109,7 +110,7 @@ class Input(BaseModel):
         for resource in v:
             # guard for the resources that do not have relationship
             if not resource.relationships:
-                break
+                continue
 
             for relation in resource.relationships:
                 if relation.table == resource.table_name:
@@ -117,8 +118,10 @@ class Input(BaseModel):
                 elif relation.table not in tables_names:
                     raise ValueError(f"Table '{resource.table_name}' has a relationship with a table that does not "
                                      f"exist in the given list of resources.")
-
-                relationships.add_edge(resource.table_name, relation.table, weight=relation.type)
+                relationships.add_edge(resource.table_name,
+                                       relation.table,
+                                       rel_type=relation.type,
+                                       referenced_field=relation.reference_field)
 
         try:
             cycle = find_cycle(relationships)
@@ -128,10 +131,22 @@ class Input(BaseModel):
             # there were no cycles and the list of resources can be updated to contain the new foreign keys and eventual
             # link tables (many-to-many)
             # TODO: idea: use factory pattern to handle actions based on relationship type
-            for table1, table2, weight in relationships.edges(data=True):
-                rel_type = weight["weight"]
+            for table1, table2, data in relationships.edges(data=True):
+                rel_type = data["rel_type"]
+                referenced_field = data["referenced_field"]
+
+                if referenced_field is not None and rel_type == "MANY-TO-MANY":
+                    raise ValueError(f"There should not be a referenced field"
+                                     f" when the relationship type is 'MANY-TO-MANY'")
+                if referenced_field is None and rel_type != "MANY-TO-MANY":
+                    raise ValueError(f"Please introduce a referenced field in the child table.")
+
                 table1 = list(filter(lambda x: x.table_name == table1, v))[0]
                 table2 = list(filter(lambda x: x.table_name == table2, v))[0]
+                table1_field = list(filter(lambda x: x.name == referenced_field, table1.fields))
+
+                if len(table1_field) == 0:
+                    raise ValueError(f"The referenced field should exist in '{table1.table_name}'!")
 
                 if rel_type == "MANY-TO-MANY":
                     fields = [Field(name=f"id", type="integer", nullable=False),
@@ -141,29 +156,36 @@ class Input(BaseModel):
                     # TODO: when support for composite primary keys will be added, also change here
                     link_table = Resource(name=table_name, table_name=table_name, fields=fields, primary_key="id")
                     v.append(link_table)
-                    create_fk(link_table, table1, fields[1].name)
-                    create_fk(link_table, table2, fields[2].name)
+                    create_fk_many_to_many(link_table, table1, fields[1].name)
+                    create_fk_many_to_many(link_table, table2, fields[2].name)
                 elif rel_type == "ONE-TO-ONE":
-                    create_fk(master=table1, slave=table2)
+                    create_fk(master=table2, slave=table1, reference_field=referenced_field)
                     if not table1.uniques:
                         table1.uniques = []
-                    table1.uniques.append(Unique(name='one_to_one_constr', unique_fields=[f"{table2.table_name}_fk"]))
-                elif rel_type == "MANY-TO-ONE":
-                    create_fk(master=table1, slave=table2)
-                else:
-                    create_fk(master=table2, slave=table1)
+                    table1.uniques.append(Unique(name='one_to_one_constr', unique_fields=[referenced_field]))
+                elif rel_type == "ONE-TO-MANY":
+                    create_fk(master=table2, slave=table1, reference_field=referenced_field)
 
         return v
 
 
-# theoretically bad design, changing variables passed by reference.. there should be another way
-def create_fk(master, slave, already_existent_field=None):
-    fk_name = f"{slave.table_name}_fk" if not already_existent_field else already_existent_field
+def create_fk_many_to_many(master, slave, already_existent_field=None):
+    fk_name = already_existent_field
     fk = ForeignKey(field=fk_name, references=slave.table_name, reference_field=slave.primary_key)
 
-    if not already_existent_field:
-        fk_field = Field(name=f"{slave.table_name}_fk", type="integer", nullable=False)
-        master.fields.append(fk_field)
+    if not master.foreign_keys:
+        master.foreign_keys = []
+
+    master.foreign_keys.append(fk)
+
+
+# theoretically bad design, changing variables passed by reference.. there should be another way
+def create_fk(master, slave, reference_field):
+    fk_name = f"{slave.table_name}_fk"
+    fk = ForeignKey(field=fk_name, references=slave.table_name, reference_field=reference_field)
+
+    fk_field = Field(name=f"{slave.table_name}_fk", type="integer", nullable=False)
+    master.fields.append(fk_field)
 
     if not master.foreign_keys:
         master.foreign_keys = []

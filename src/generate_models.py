@@ -33,11 +33,19 @@ class Unique:
 
 
 @dataclass
+class ForeignKey:
+    field: str
+    referenced_table: str
+    referenced_field: str
+
+
+@dataclass
 class Resource:
     name: str
     table_name: str
     fields: List[Field]
     uniques: List[Unique]
+    foreign_keys: List[ForeignKey]
 
 
 @dataclass
@@ -91,9 +99,11 @@ def generate_pydantic_models(resources_dict: dict) -> None:
 def generate_sqlalchemy_classes(resources_dict: dict) -> None:
     with open(f'{get_project_root()}/templates/sqlalchemy_model.jinja2', 'r') as f:
         sqlalchemy_template = Template(f.read(), trim_blocks=True, lstrip_blocks=True)
-
         for resource in resources_dict:
             fields = []
+            foreign_keys = [ForeignKey(x["field"], x["references"], x["reference_field"]) \
+                            for x in resource["foreign_keys"]] if resource["foreign_keys"] is not None else []
+
             for field in resource["fields"]:
                 fields.append(Field(field["name"],
                                     get_attributes_from_field(field, (field["name"] == resource["primary_key"]))))
@@ -103,7 +113,8 @@ def generate_sqlalchemy_classes(resources_dict: dict) -> None:
             sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
                                                                            resource["table_name"],
                                                                            fields,
-                                                                           uniques))
+                                                                           uniques,
+                                                                           foreign_keys))
 
             with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as gen_f:
                 gen_f.write(sqlalchemy_code)

@@ -30,12 +30,6 @@ resources = [
             }
         ],
         "primary_key": "isbn",
-        "relationships": [
-            {
-                "type": "ONE-TO-ONE",
-                "table": "authors"
-            }
-        ],
         "uniques": [
             {
                 "name": "books_un_1",
@@ -68,16 +62,22 @@ resources = [
                 "nullable": False
             }
         ],
+        "relationships": [
+            {
+                "type": "ONE-TO-MANY",
+                "table": "Books",
+                "reference_field": "author_id"
+            }
+        ],
         "primary_key": "author_id",
     }
 ]
-
 
 if __name__ == "__main__":
     res = {"resources": resources}
     shapeshift_resources = Input(**res).resources
     resources = [resource.dict() for resource in shapeshift_resources]
-
+    print(resources)
     # TODO: chain of responsibility
     generate_connection()
     generate_db_create_code(json.dumps(resources))
