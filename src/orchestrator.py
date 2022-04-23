@@ -6,6 +6,7 @@ from generate_fastapi import generate_fastapi_code
 from generate_sqlalchemy_models import generate_sqlalchemy_classes
 from generate_model_code import generate_model_code
 from view import Input
+from RelationshipHandler import RelationshipHandler
 
 resources = [
     {
@@ -31,6 +32,13 @@ resources = [
             }
         ],
         "primary_key": "isbn",
+        "relationships": [
+            {
+                "type": "ONE-TO-MANY",
+                "table": "authors",
+                "reference_field": "isbn"
+            }
+        ],
         "uniques": [
             {
                 "name": "books_un_1",
@@ -63,21 +71,18 @@ resources = [
                 "nullable": False
             }
         ],
-        "relationships": [
-            {
-                "type": "ONE-TO-ONE",
-                "table": "Books",
-                "reference_field": "author_id"
-            }
-        ],
+
         "primary_key": "author_id",
     }
 ]
 
 if __name__ == "__main__":
     res = {"resources": resources}
-    shapeshift_resources = Input(**res).resources
-    resources = [resource.dict() for resource in shapeshift_resources]
+
+    r = RelationshipHandler(Input(**res).resources)
+    r.execute()
+    resources = [resource.dict() for resource in r.resources]
+
     # TODO: chain of responsibility
     generate_connection()
     generate_db_create_code(resources)
