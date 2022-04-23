@@ -1,5 +1,6 @@
 import sqlalchemy
 from db import Base
+from sqlalchemy import orm
 
 {% macro gen_fields() -%}
     {%- for field in resource.fields -%}
@@ -11,10 +12,29 @@ from db import Base
         sqlalchemy.UniqueConstraint({% for field in unique.unique_fields -%}{{ field|tojson }}, {% endfor %} name={{ unique.name|tojson }})
     {% endfor %}
 {% endmacro %}
+{% macro gen_relationships() %}
+    {%- for relation in resource.relationships -%}
+        {%- if relation.role == "Child" -%}
+            {%- if relation.type == "ONE-TO-ONE" -%}
+                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }}, back_populates={{ resource.table_name | lower | tojson  }})
+            {% endif %}
+        {%- else -%}
+            {%- if relation.type == "ONE-TO-ONE" -%}
+                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }}, back_populates={{ resource.table_name | lower | tojson  }})
+            {%- elif relation.type == "ONE-TO-MANY" -%}
+                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }})
+            {%- else -%}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
 
 class {{ resource.name }}(Base):
     __tablename__ = {{resource.table_name|tojson}}
     {{ gen_fields()|indent(width=4, first=False) }}
     {%- if resource.uniques %}
     {{ gen_uniques()|indent(width=4, first=False) -}}
+    {% endif %}
+    {%- if resource.relationships %}
+    {{ gen_relationships()|indent(width=4, first=False) -}}
     {% endif %}
