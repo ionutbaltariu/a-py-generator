@@ -56,6 +56,7 @@ class Relationship(BaseModel, extra=Extra.forbid):
     type: Literal["ONE-TO-ONE", "ONE-TO-MANY", "MANY-TO-MANY"]
     table: constr(min_length=1, max_length=64)
     reference_field: Optional[constr(min_length=1, max_length=64)]
+    role: Optional[Literal["Child", "Parent"]]
 
 
 class ForeignKey(BaseModel, extra=Extra.forbid):

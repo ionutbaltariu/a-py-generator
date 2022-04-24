@@ -1,4 +1,4 @@
-from view import Resource, ForeignKey, Field, Unique
+from view import Resource, ForeignKey, Field, Unique, Relationship
 from typing import List
 from networkx import DiGraph, find_cycle, exception
 
@@ -78,10 +78,25 @@ class RelationshipHandler:
         create_fk_many_to_many(link_table, parent_table, fields[1].name)
         create_fk_many_to_many(link_table, child_table, fields[2].name)
 
+    def generate_mirror_relationships(self):
+        for parent, _, data in self.relationships.edges(data=True):
+            rel_type = data["rel_type"]
+            referenced_field = data["referenced_field"]
+            child_table = data["child"]
+
+            if not child_table.relationships:
+                child_table.relationships = []
+
+            child_table.relationships.append(Relationship(type=rel_type,
+                                                          table=parent,
+                                                          reference_field=referenced_field.name,
+                                                          role="Child"))
+
     def execute(self):
         self.compute_relationships_graph()
         self.check_for_cycles_in_relationship()
         self.change_resources_based_on_relationships()
+        self.generate_mirror_relationships()
 
 
 def create_fk_many_to_many(master, slave, field):

@@ -18,11 +18,19 @@ class Unique:
 
 
 @dataclass
+class Relationship:
+    type: str
+    table: str
+    reference_field: str
+    role: str
+
+@dataclass
 class Resource:
     name: str
     table_name: str
     fields: List[Field]
     uniques: List[Unique]
+    relationships: List[Relationship]
 
 
 datatype_converter = {
@@ -54,11 +62,13 @@ def generate_sqlalchemy_classes(resources: List[dict]) -> None:
                 fields.append(Field(field["name"], field_attributes))
 
             uniques = resource["uniques"] if "uniques" in resource else None
+            relationships = resource["relationships"] if "relationships" in resource else None
 
             sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
                                                                            resource["table_name"],
                                                                            fields,
-                                                                           uniques))
+                                                                           uniques,
+                                                                           relationships))
 
             with open(f'{get_project_root()}/generated/{resource["name"]}.py', 'w', encoding='utf-8') as gen_f:
                 gen_f.write(sqlalchemy_code)

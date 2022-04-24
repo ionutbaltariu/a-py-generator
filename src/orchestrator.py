@@ -34,7 +34,7 @@ resources = [
         "primary_key": "isbn",
         "relationships": [
             {
-                "type": "ONE-TO-MANY",
+                "type": "ONE-TO-ONE",
                 "table": "authors",
                 "reference_field": "isbn"
             }
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     r = RelationshipHandler(Input(**res).resources)
     r.execute()
     resources = [resource.dict() for resource in r.resources]
-
+    print(resources)
     # TODO: chain of responsibility
     generate_connection()
     generate_db_create_code(resources)
