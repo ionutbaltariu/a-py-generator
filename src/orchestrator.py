@@ -1,12 +1,10 @@
-from generate_db_connection import generate_connection
-from generate_sql import generate_db_create_code
-from generate_docker_files import generate_docker_compose
-from generate_pydantic import generate_pydantic_models
-from generate_fastapi import generate_fastapi_code
-from generate_sqlalchemy_models import generate_sqlalchemy_classes
-from generate_model_code import generate_model_code
-from view import Input
+from SQLAlchemyGenerator import SQLAlchemyGenerator
+from PydanticGenerator import PydanticGenerator
+from FastAPIGenerator import FastAPIGenerator
+from SQLGenerator import SQLGenerator
+from DockerGenerator import DockerGenerator
 from RelationshipHandler import RelationshipHandler
+from view import Input
 
 resources = [
     {
@@ -78,16 +76,18 @@ resources = [
 
 if __name__ == "__main__":
     res = {"resources": resources}
-
     r = RelationshipHandler(Input(**res).resources)
     r.execute()
     resources = [resource.dict() for resource in r.resources]
-    print(resources)
-    # TODO: chain of responsibility
-    generate_connection()
-    generate_db_create_code(resources)
-    generate_docker_compose()
-    generate_pydantic_models(resources)
-    generate_sqlalchemy_classes(resources)
-    generate_model_code(resources)
-    generate_fastapi_code(resources)
+
+    sqlalchemy_generator = SQLAlchemyGenerator(resources)
+    pydantic_generator = PydanticGenerator(resources)
+    fastapi_generator = FastAPIGenerator(resources)
+    sql_generator = SQLGenerator(resources)
+    docker_generator = DockerGenerator()
+
+    docker_generator.generate()
+    sql_generator.generate()
+    sqlalchemy_generator.generate()
+    pydantic_generator.generate()
+    fastapi_generator.generate()
