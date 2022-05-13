@@ -68,9 +68,30 @@ class RelationshipHandler:
                                       fk_name)
 
     def handle_many_to_many(self, child_table, parent_table):
+        p_table_f = [x for x in parent_table.fields if x.name == parent_table.primary_key]
+        if p_table_f[0].type == "string":
+            params = {
+                "type": "string",
+                "length": p_table_f[0].length
+            }
+        else:
+            params = {
+                "type": p_table_f[0].type
+            }
+
+        c_table_f = [x for x in child_table.fields if x.name == child_table.primary_key]
+        if c_table_f[0].type == "string":
+            params2 = {
+                "type": "string",
+                "length": c_table_f[0].length
+            }
+        else:
+            params2 = {
+                "type": c_table_f[0].type
+            }
         fields = [Field(name=f"id", type="integer", nullable=False),
-                  Field(name=f"{parent_table.primary_key}", type="integer", nullable=False),
-                  Field(name=f"{child_table.primary_key}", type="integer", nullable=False)]
+                  Field(name=f"{parent_table.primary_key}", nullable=False, **params),
+                  Field(name=f"{child_table.primary_key}",  nullable=False, **params2)]
         table_name = f"{parent_table.table_name}_{child_table.table_name}"
         # TODO: when support for composite primary keys will be added, also change here
         link_table = Resource(name=table_name, table_name=table_name, fields=fields, primary_key="id")
@@ -83,6 +104,9 @@ class RelationshipHandler:
             rel_type = data["rel_type"]
             referenced_field = data["referenced_field"]
             child_table = data["child"]
+
+            if rel_type == "MANY-TO-MANY":
+                continue
 
             if not child_table.relationships:
                 child_table.relationships = []

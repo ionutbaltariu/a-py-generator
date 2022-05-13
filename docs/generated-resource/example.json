@@ -22,6 +22,12 @@
             }
         ],
         "primary_key": "isbn",
+        "relationships": [
+            {
+                "type": "MANY-TO-MANY",
+                "table": "Authors"
+            }
+        ],
         "uniques": [
             {
                 "name": "books_un_1",
@@ -34,7 +40,7 @@
     },
     {
         "name": "Author",
-        "table_name": "authors",
+        "table_name": "Authors",
         "fields": [
             {
                 "name": "author_id",
@@ -54,6 +60,7 @@
                 "nullable": false
             }
         ],
+
         "primary_key": "author_id"
     }
 ]

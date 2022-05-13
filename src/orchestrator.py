@@ -32,9 +32,8 @@ resources = [
         "primary_key": "isbn",
         "relationships": [
             {
-                "type": "ONE-TO-ONE",
-                "table": "authors",
-                "reference_field": "isbn"
+                "type": "MANY-TO-MANY",
+                "table": "Authors"
             }
         ],
         "uniques": [
@@ -49,7 +48,7 @@ resources = [
     },
     {
         "name": "Author",
-        "table_name": "authors",
+        "table_name": "Authors",
         "fields": [
             {
                 "name": "author_id",

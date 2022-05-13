@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Tichet",
+        "table_name": "tichete",
+        "fields": [
+            {
+                "name": "idTichet",
+                "type": "integer",
+                "nullable": false
+            },
+            {
+                "name": "idTichet",
+                "type": "integer",
+                "nullable": false
+            },
+            {
+                "name": "prioritate",
+                "type": "string",
+                "length": 10,
+                "nullable": false
+            },
+            {
+                "name": "descriere",
+                "type": "string",
+                "length": 300,
+                "nullable": false
+            },
+            {
+                "name": "stare",
+                "type": "string",
+                "length": 15,
+                "nullable": false
+            }
+        ],
+        "primary_key": "idTichet"
+    }
+]
