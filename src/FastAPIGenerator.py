@@ -4,8 +4,9 @@ from typing import List
 
 
 class FastAPIGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict], generation_uid):
+    def __init__(self, resources: List[dict], generation_uid, type: str):
         super().__init__(resources, generation_uid)
+        self.type = type
 
     def create_utils_file(self, resources: List[dict]):
         utils_template = read_template_from_file(f'{self.project_root_dir}/templates/utils.jinja2')
@@ -13,7 +14,10 @@ class FastAPIGenerator(ResourceBasedGenerator):
         write_to_file(f'{self.generation_path}/utils.py', utils_code)
 
     def create_routers(self, resources: List[dict]):
-        router_template = read_template_from_file(f'{self.project_root_dir}/templates/router.jinja2')
+        if self.type == "MariaDB":
+            router_template = read_template_from_file(f'{self.project_root_dir}/templates/router_with_sql.jinja2')
+        elif self.type == "MongoDB":
+            router_template = read_template_from_file(f'{self.project_root_dir}/templates/router_with_mongo.jinja2')
 
         for resource in resources:
             router_code = router_template.render(entity=resource)

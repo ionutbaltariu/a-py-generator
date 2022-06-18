@@ -94,7 +94,7 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
 
     def generate_sqlalchemy_classes(self) -> None:
         # TODO: Refactor down to small, understandable pieces
-        sqlalchemy_template = read_template_from_file(f"{self.project_root_dir}/templates/sqlalchemy_model.jinja2")
+        sqlalchemy_template = read_template_from_file(f"{self.project_root_dir}/templates/sqlalchemy_model_sql.jinja2")
         for resource in self.resources:
             fields = []
 
@@ -132,7 +132,7 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
         Method that triggers the 'model.py' code generation - file contains code that's used to
         perform database operations
         """
-        model_template = read_template_from_file(f'{self.project_root_dir}/templates/model.jinja2')
+        model_template = read_template_from_file(f'{self.project_root_dir}/templates/model_sql.jinja2')
         model_code = model_template.render(entities=self.resources)
         write_to_file(f'{self.generation_path}/model.py', model_code)
 

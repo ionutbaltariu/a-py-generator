@@ -1,0 +1,93 @@
+from pymongo.collection import Collection
+from pymongo import MongoClient
+
+
+class MongoHandler:
+    def __init__(self,
+                 database: str,
+                 username={{ username|tojson }},
+                 password={{ password|tojson }},
+                 hostname={{ hostname|tojson }},
+                 port={{ port }},
+                 connection_retries=3):
+        connection_string = f"mongodb://{username}:{password}@{hostname}:{port}"
+        self.connection = MongoClient(connection_string)
+        self.database = self.connection[database]
+        connection_ok_flag = True if self.database.command('ping')['ok'] == 1.0 else False
+
+        while connection_retries > 0 and connection_ok_flag is False:
+            self.connection = MongoClient(connection_string)
+            connection_ok_flag = True if self.database.command('ping')['ok'] == 1.0 else False
+            connection_retries -= 1
+
+        print("Connection successful" if connection_ok_flag else "Failed to connect")
+
+    def get_collection(self, collection_name: str) -> Collection:
+        return self.database[collection_name]
+
+handler = MongoHandler('generated', connection_retries=5)
+
+
+{% for entity in entities -%}
+def get_{{ entity.name|lower }}_by_{{ entity.primary_key }}({{ entity.primary_key|lower }}):
+    """
+    Wrapper for an call that is retrieving a(n) entity by its {{ entity.primary_key }}.
+    :param {{ entity.primary_key }}: TODO
+    """
+    {{ entity.name|lower }} = handler.get_collection("{{ entity.table_name|lower }}").find_one({
+        "{{ entity.primary_key }}": {{ entity.primary_key }}
+    })
+
+    if {{ entity.name|lower }} == {}:
+        {{ entity.name|lower }} = None
+
+    return {{ entity.name|lower }}
+
+
+{% endfor %}
+{% for entity in entities -%}
+def get_all_{{ entity.table_name|lower }}_with_filters(**kwargs):
+    """
+    Wrapper for an ORM call that is retrieving all {{ entity.table_name|lower }} by {{ entity.primary_key|lower }}
+    :param kwargs: the parameters by which the filters will be made
+    """
+    return [x for x in handler.get_collection("{{ entity.table_name|lower }}").find({**kwargs})]
+
+
+{% endfor %}
+{% for entity in entities -%}
+def update_{{ entity.name|lower }}({{ entity.primary_key }}, {{ entity.name|lower }}):
+    """
+    Wrapper for an ORM call that updates a(n) {{ entity.name|lower }} in the database.
+    :param {{ entity.primary_key }}: the identifier of the {{ entity.name }}
+    :param {{ entity.name|lower }}: a dictionary containing the fields of the {{ entity.name|lower }} - can be partial
+    """
+    return handler.get_collection("{{ entity.table_name|lower }}").update_one({
+        "{{ entity.primary_key }}": {{ entity.primary_key }},
+    },
+    {{ entity.name|lower }})
+
+
+{% endfor %}
+{% for entity in entities %}
+def delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}({{ entity.primary_key|lower }}):
+    """
+    Wrapper for an ORM call that is deleting a(n) {{ entity.name|lower }} by its {{ entity.primary_key|lower }}.
+    :param {{ entity.primary_key|lower }}: {{ entity.primary_key|lower }} of the {{ entity.name|lower }} that is to be deleted
+    """
+    return handler.get_collection("{{ entity.table_name|lower }}").delete_one({
+        "{{ entity.primary_key }}": {{ entity.primary_key }}
+    })
+
+
+{% endfor %}
+{% for entity in entities %}
+def insert_{{ entity.name|lower }}({{ entity.name|lower }}):
+    """
+    Wrapper for an ORM call that is creating a(n) {{ entity.name|lower }}.
+    :param kwargs: the attributes of the {{ entity.name }} that is to be created
+    """
+    return handler.get_collection("{{ entity.table_name|lower }}").insert_one({{ entity.name|lower }})
+
+
+{% endfor %}

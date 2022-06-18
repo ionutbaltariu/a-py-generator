@@ -6,6 +6,7 @@ from fastapi import FastAPI, Response
 from PydanticGenerator import PydanticGenerator
 from RelationshipHandler import RelationshipHandler
 from SQLAlchemyGenerator import SQLAlchemyGenerator
+from MongoGenerator import MongoGenerator
 from DockerGenerator import DockerGenerator
 from FastAPIGenerator import FastAPIGenerator
 from SQLGenerator import SQLGenerator
@@ -45,23 +46,26 @@ def zipfiles(path):
 
 @app.post("/api/generate/")
 def read_root(generation_metadata: Input):
+    print(generation_metadata)
     generation_id = uuid.uuid4()
     r = RelationshipHandler(generation_metadata.resources)
     r.execute()
     resources = [resource.dict() for resource in r.resources]
+    generators = []
+    db_type = generation_metadata.options.database_options.db_type
 
-    sqlalchemy_generator = SQLAlchemyGenerator(resources, generation_id)
-    pydantic_generator = PydanticGenerator(resources, generation_id)
-    fastapi_generator = FastAPIGenerator(resources, generation_id)
-    sql_generator = SQLGenerator(resources, generation_id)
-    docker_generator = DockerGenerator(generation_id)
-    requirements_generator = RequirementsGenerator(generation_id)
+    if db_type == "MariaDB":
+        generators.append(SQLAlchemyGenerator(resources, generation_id))
+        generators.append(SQLGenerator(resources, generation_id))
+    elif db_type == "MongoDB":
+        generators.append(MongoGenerator(resources, generation_id))
 
-    docker_generator.generate()
-    sql_generator.generate()
-    sqlalchemy_generator.generate()
-    pydantic_generator.generate()
-    fastapi_generator.generate()
-    requirements_generator.generate()
+    generators.append(FastAPIGenerator(resources, generation_id, type=db_type))
+    generators.append(PydanticGenerator(resources, generation_id))
+    generators.append(DockerGenerator(generation_id))
+    generators.append(RequirementsGenerator(generation_id))
+
+    for generator in generators:
+        generator.generate()
 
     return zipfiles(f'{get_project_root()}/{generation_id}')

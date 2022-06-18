@@ -1,7 +1,5 @@
-import networkx.exception
 from pydantic import BaseModel, constr, validator, Extra
 from typing import List, Optional, Literal
-from networkx import DiGraph, find_cycle
 from keyword import iskeyword
 from config import MAX_RESOURCES_ALLOWED
 
@@ -67,6 +65,34 @@ class ForeignKey(BaseModel, extra=Extra.forbid):
     field: constr(min_length=1, max_length=64)
     references: constr(min_length=1, max_length=64)
     reference_field: constr(min_length=1, max_length=64)
+
+
+class DatabaseOptions(BaseModel, extra=Extra.forbid):
+    db_type: Literal["MariaDB", "MongoDB"]
+    db_username: Optional[constr(min_length=1, max_length=64)]
+    db_password: Optional[constr(min_length=1, max_length=64)]
+    db_hostname: Optional[constr(min_length=1, max_length=64)]
+    db_port: Optional[int]
+
+    @validator("db_port")
+    def validate_port(cls, port):
+        if port > 65535:
+            raise ValueError(f"A port can have a maximum value of 65535!")
+        elif port < 0:
+            raise ValueError(f"Please provide a positive number for the port.")
+        return port
+
+
+class ProjectMetadata(BaseModel, extra=Extra.forbid):
+    title: constr(min_length=1, max_length=64)
+    description: constr(min_length=1, max_length=512)
+    version: constr(min_length=1, max_length=8)
+    # TODO: de completat cu alte metadate pentru proiectul FastAPI
+
+
+class Options(BaseModel, extra=Extra.forbid):
+    database_options: Optional[DatabaseOptions]
+    project_metadata: Optional[ProjectMetadata]
 
 
 class Resource(BaseModel, extra=Extra.forbid):
@@ -154,6 +180,7 @@ class Resource(BaseModel, extra=Extra.forbid):
 
 class Input(BaseModel, extra=Extra.forbid):
     resources: List[Resource]
+    options: Optional[Options]
 
     @validator('resources')
     def resource_list_cannot_be_empty(cls, v):
