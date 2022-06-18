@@ -1,4 +1,4 @@
-from utils import get_project_root, read_template_from_file, write_to_file
+from utils import read_template_from_file, write_to_file
 from dataclasses import dataclass
 from typing import List
 from Generator import ResourceBasedGenerator
@@ -80,21 +80,21 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
 
 class SQLAlchemyGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict]):
-        super().__init__(resources)
+    def __init__(self, resources: List[dict], generation_uid):
+        super().__init__(resources, generation_uid)
         self.db_connection_config = ConnectionConfig()
 
     def generate_connection_from_template(self) -> None:
         """
         Method that generates a database connection from a given configuration.
         """
-        db_conn_template = read_template_from_file(f'{get_project_root()}/templates/db_conn.jinja2')
+        db_conn_template = read_template_from_file(f'{self.project_root_dir}/templates/db_conn.jinja2')
         db_conn_code = db_conn_template.render(cfg=self.db_connection_config)
-        write_to_file(f'{get_project_root()}/generated/db.py', db_conn_code)
+        write_to_file(f'{self.generation_path}/db.py', db_conn_code)
 
     def generate_sqlalchemy_classes(self) -> None:
         # TODO: Refactor down to small, understandable pieces
-        sqlalchemy_template = read_template_from_file(f"{get_project_root()}/templates/sqlalchemy_model.jinja2")
+        sqlalchemy_template = read_template_from_file(f"{self.project_root_dir}/templates/sqlalchemy_model.jinja2")
         for resource in self.resources:
             fields = []
 
@@ -125,16 +125,16 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
                                                                            fields,
                                                                            uniques,
                                                                            relationships))
-            write_to_file(f'{self.project_root_dir}/generated/{resource["name"]}.py', sqlalchemy_code)
+            write_to_file(f'{self.generation_path}/{resource["name"]}.py', sqlalchemy_code)
 
     def generate_model_code(self) -> None:
         """
         Method that triggers the 'model.py' code generation - file contains code that's used to
         perform database operations
         """
-        model_template = read_template_from_file(f'{get_project_root()}/templates/model.jinja2')
+        model_template = read_template_from_file(f'{self.project_root_dir}/templates/model.jinja2')
         model_code = model_template.render(entities=self.resources)
-        write_to_file(f'{self.project_root_dir}/generated/model.py', model_code)
+        write_to_file(f'{self.generation_path}/model.py', model_code)
 
     def generate(self):
         self.generate_connection_from_template()

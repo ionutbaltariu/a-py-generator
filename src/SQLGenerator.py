@@ -66,8 +66,8 @@ class Table:
 
 
 class SQLGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict]):
-        super().__init__(resources)
+    def __init__(self, resources: List[dict], generation_uid):
+        super().__init__(resources, generation_uid)
 
     def generate(self) -> None:
         """
@@ -96,4 +96,4 @@ class SQLGenerator(ResourceBasedGenerator):
 
         sql_template = read_template_from_file(f'{self.project_root_dir}/templates/sql.jinja2')
         sql_code = sql_template.render(tables=tables_to_be_created)
-        write_to_file(f'{self.project_root_dir}/generated/create_db_and_tables.sql', sql_code)
+        write_to_file(f'{self.generation_path}/create_db_and_tables.sql', sql_code)

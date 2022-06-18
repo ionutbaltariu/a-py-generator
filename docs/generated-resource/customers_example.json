@@ -64,13 +64,14 @@
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Orders"
+                "table": "Ord",
+                "reference_field": "custid"
             }
         ]
     },
     {
         "name": "Order",
-        "table_name": "orders",
+        "table_name": "Ord",
         "fields": [
             {
                 "name": "ordid",
@@ -92,7 +93,8 @@
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Items"
+                "table": "Items",
+                "reference_field": "ordid"
             }
         ]
     },
@@ -112,7 +114,7 @@
                 "nullable": true
             },
             {
-                "name": "tva",
+                "name": "vat",
                 "type": "decimal",
                 "nullable": true
             },
@@ -126,7 +128,8 @@
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Items"
+                "table": "Items",
+                "reference_field": "prodid"
             }
         ]
     },
