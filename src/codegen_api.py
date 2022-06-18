@@ -9,6 +9,7 @@ from SQLAlchemyGenerator import SQLAlchemyGenerator
 from DockerGenerator import DockerGenerator
 from FastAPIGenerator import FastAPIGenerator
 from SQLGenerator import SQLGenerator
+from RequirementsGenerator import RequirementsGenerator
 from view import Input
 from utils import get_project_root
 
@@ -54,11 +55,13 @@ def read_root(generation_metadata: Input):
     fastapi_generator = FastAPIGenerator(resources, generation_id)
     sql_generator = SQLGenerator(resources, generation_id)
     docker_generator = DockerGenerator(generation_id)
+    requirements_generator = RequirementsGenerator(generation_id)
 
     docker_generator.generate()
     sql_generator.generate()
     sqlalchemy_generator.generate()
     pydantic_generator.generate()
     fastapi_generator.generate()
+    requirements_generator.generate()
 
     return zipfiles(f'{get_project_root()}/{generation_id}')

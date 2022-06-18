@@ -1,7 +1,7 @@
 import json
 from typing import Any
 from pydantic import BaseModel
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 {% for resource in resources %}
 {{ resource.name|upper }}_NOT_FOUND_BODY = {
