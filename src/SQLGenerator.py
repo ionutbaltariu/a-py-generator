@@ -7,7 +7,8 @@ datatype_converter = {
     'string': 'varchar({length})',
     'integer': 'int(11)',
     'decimal': 'double(5, 2)',
-    'boolean': 'boolean'
+    'boolean': 'boolean',
+    'date': 'date'
 }
 
 

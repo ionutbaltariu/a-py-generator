@@ -7,7 +7,8 @@ pseudocode_to_pydantic = {
     'string': 'constr(min_length=1, max_length={length})',
     'integer': 'int',
     'decimal': 'float',
-    'boolean': 'bool'
+    'boolean': 'bool',
+    'date': 'datetime.date'
 }
 
 
@@ -20,6 +21,7 @@ class PydanticField:
 @dataclass
 class PydanticResource:
     name: str
+    table_name: str
     primary_key: str
     fields: List[PydanticField]
 
@@ -39,7 +41,10 @@ class PydanticGenerator(ResourceBasedGenerator):
                     field_type = pseudocode_to_pydantic[field["type"]]
 
                 fields.append(PydanticField(field["name"], field_type))
-            resources.append(PydanticResource(resource["name"], resource["primary_key"], fields))
+            resources.append(PydanticResource(resource["name"],
+                                              resource["table_name"],
+                                              resource["primary_key"],
+                                              fields))
 
         pydantic_template = read_template_from_file(f'{get_project_root()}/templates/pydantic.jinja2')
         pydantic_code = pydantic_template.render(resources=resources)

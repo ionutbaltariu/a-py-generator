@@ -1,12 +1,4 @@
-from SQLAlchemyGenerator import SQLAlchemyGenerator
-from CLI import PydanticGenerator
-from FastAPIGenerator import FastAPIGenerator
-from SQLGenerator import SQLGenerator
-from DockerGenerator import DockerGenerator
-from RelationshipHandler import RelationshipHandler
-from view import Input
-
-resources = [
+[
     {
         "name": "Customer",
         "table_name": "Customers",
@@ -14,95 +6,93 @@ resources = [
             {
                 "name": "custid",
                 "type": "integer",
-                "nullable": False
+                "nullable": false
             },
             {
                 "name": "name",
                 "type": "string",
                 "length": 45,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "address",
                 "type": "string",
                 "length": 40,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "city",
                 "type": "string",
                 "length": 30,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "state",
                 "type": "string",
                 "length": 2,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "zip",
                 "type": "string",
                 "length": 9,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "area",
                 "type": "integer",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "phone",
                 "type": "string",
                 "length": 9,
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "repid",
                 "type": "integer",
-                "nullable": False
+                "nullable": false
             },
             {
                 "name": "creditlimit",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             }
         ],
         "primary_key": "custid",
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Ord",
-                "reference_field": "custid"
+                "table": "Orders"
             }
         ]
     },
     {
         "name": "Order",
-        "table_name": "Ord",
+        "table_name": "orders",
         "fields": [
             {
                 "name": "ordid",
                 "type": "integer",
-                "nullable": False
+                "nullable": false
             },
             {
                 "name": "total",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "totaltva",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             }
         ],
         "primary_key": "ordid",
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Items",
-                "reference_field": "ordid"
+                "table": "Items"
             }
         ]
     },
@@ -113,31 +103,30 @@ resources = [
             {
                 "name": "prodid",
                 "type": "integer",
-                "nullable": False
+                "nullable": false
             },
             {
                 "name": "descrip",
                 "type": "string",
                 "length": 30,
-                "nullable": True
+                "nullable": true
             },
             {
-                "name": "vat",
+                "name": "tva",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "exp_date",
                 "type": "date",
-                "nullable": True
+                "nullable": true
             }
         ],
         "primary_key": "prodid",
         "relationships": [
             {
                 "type": "ONE-TO-MANY",
-                "table": "Items",
-                "reference_field": "prodid"
+                "table": "Items"
             }
         ]
     },
@@ -148,62 +137,44 @@ resources = [
             {
                 "name": "itemid",
                 "type": "integer",
-                "nullable": False
+                "nullable": false
             },
             {
                 "name": "actualprice",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "qty",
                 "type": "integer",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "itemtot",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "tva",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "itemgen",
                 "type": "decimal",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "guarantee",
                 "type": "integer",
-                "nullable": True
+                "nullable": true
             },
             {
                 "name": "exp_date",
                 "type": "date",
-                "nullable": True
+                "nullable": true
             }
         ],
         "primary_key": "itemid"
     }
 ]
-
-if __name__ == "__main__":
-    res = {"resources": resources}
-    r = RelationshipHandler(Input(**res).resources)
-    r.execute()
-    resources = [resource.dict() for resource in r.resources]
-
-    sqlalchemy_generator = SQLAlchemyGenerator(resources)
-    pydantic_generator = PydanticGenerator(resources)
-    fastapi_generator = FastAPIGenerator(resources)
-    sql_generator = SQLGenerator(resources)
-    docker_generator = DockerGenerator()
-
-    docker_generator.generate()
-    sql_generator.generate()
-    sqlalchemy_generator.generate()
-    pydantic_generator.generate()
-    fastapi_generator.generate()

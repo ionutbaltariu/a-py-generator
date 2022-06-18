@@ -16,13 +16,13 @@ from sqlalchemy import orm
     {%- for relation in resource.relationships -%}
         {%- if relation.role == "Child" -%}
             {%- if relation.type == "ONE-TO-ONE" -%}
-                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }}, back_populates={{ resource.table_name | lower | tojson  }})
+                {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }}, back_populates={{ resource.name | lower | tojson  }})
             {% endif %}
         {%- else -%}
             {%- if relation.type == "ONE-TO-ONE" -%}
-                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }}, back_populates={{ resource.table_name | lower | tojson  }})
+                {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }}, back_populates={{ resource.name | lower | tojson  }})
             {%- elif relation.type == "ONE-TO-MANY" -%}
-                {{- relation.table | lower }} = orm.relationship({{ relation.table | tojson }})
+                {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }})
             {%- else -%}
             {% endif %}
         {% endif %}

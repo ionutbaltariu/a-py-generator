@@ -24,6 +24,7 @@ class Relationship:
     table: str
     reference_field: str
     role: str
+    resource: str
 
 
 @dataclass
@@ -39,7 +40,8 @@ datatype_converter = {
     'string': 'sqlalchemy.String',
     'integer': 'sqlalchemy.Integer',
     'decimal': 'sqlalchemy.Float',
-    'boolean': 'sqlalchemy.Boolean'
+    'boolean': 'sqlalchemy.Boolean',
+    'date': 'sqlalchemy.Date'
 }
 
 
@@ -112,6 +114,11 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
 
             uniques = resource["uniques"] if "uniques" in resource else None
             relationships = resource["relationships"] if "relationships" in resource else None
+            # getting the name of the referenced resource by the table
+            # can be refactored by handling relationships with referenced to other resources instead of tables
+            for rel in relationships:
+                rel["resource"] = [x for x in self.resources
+                                   if x.get("table_name") == rel.get("table")][0].get("name")
 
             sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
                                                                            resource["table_name"],

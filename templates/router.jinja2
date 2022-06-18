@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from utils import JsonResponse
 from typing import List
 from model import get_all_{{ entity.table_name|lower }}_with_filters, get_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, insert_{{ entity.name|lower }}, update_{{ entity.name|lower }}
 from utils import GenericSuccess, get_error_body, {{ entity.name|upper }}_NOT_FOUND_BODY, GENERIC_SUCCESS_STATUS_BODY, CREATE_GENERIC_SUCCESS_STATUS_BODY
@@ -34,7 +34,7 @@ def get_{{ entity.table_name|lower }}(page: int = 1, items_per_page: int = 15):
             {{ entity.name|lower }}_list.append({{ entity.name }}.from_orm({{ entity.name|lower }}).dict())
         response_body = {{ entity.name|lower }}_list[(page - 1) * items_per_page:page * items_per_page]
 
-    return JSONResponse(status_code=status_code, content=response_body)
+    return JsonResponse(status_code=status_code, content=response_body)
 
 
 @router.get("/api/{{ entity.table_name|lower }}/{% raw %}{{% endraw %}{{ entity.primary_key }}{% raw %}}{% endraw %}",
@@ -59,7 +59,7 @@ def get_{{ entity.name|lower }}({{ entity.primary_key }}: str):
         status_code = 200
         response_body = {{ entity.name }}.from_orm(db_response.payload).dict()
 
-    return JSONResponse(status_code=status_code, content=response_body)
+    return JsonResponse(status_code=status_code, content=response_body)
 
 
 @router.delete("/api/{{ entity.table_name|lower }}/{% raw %}{{% endraw %}{{ entity.primary_key }}{% raw %}}{% endraw %}",
@@ -84,7 +84,7 @@ def delete_{{ entity.name|lower }}({{ entity.primary_key }}: str):
         status_code = 200
         response_body = GENERIC_SUCCESS_STATUS_BODY
 
-    return JSONResponse(status_code=status_code, content=response_body)
+    return JsonResponse(status_code=status_code, content=response_body)
 
 
 @router.post("/api/{{ entity.table_name|lower }}/",
@@ -109,7 +109,7 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}):
         status_code = 201
         response_body = CREATE_GENERIC_SUCCESS_STATUS_BODY
 
-    return JSONResponse(status_code=status_code, content=response_body)
+    return JsonResponse(status_code=status_code, content=response_body)
 
 
 @router.put("/api/{{ entity.table_name|lower }}/{% raw %}{{% endraw %}{{ entity.primary_key }}{% raw %}}{% endraw %}",
@@ -145,4 +145,4 @@ def put_{{ entity.name|lower }}({{ entity.primary_key }}: str, {{ entity.name|lo
         status_code = 200
         response_body = GENERIC_SUCCESS_STATUS_BODY
 
-    return JSONResponse(status_code=status_code, content=response_body)
+    return JsonResponse(status_code=status_code, content=response_body)

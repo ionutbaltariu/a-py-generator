@@ -20,9 +20,15 @@ class FastAPIGenerator(ResourceBasedGenerator):
             write_to_file(f'{self.project_root_dir}/generated/{resource["name"].lower()}_router.py', router_code)
 
     def create_main_app(self, resources: List[dict]):
-        app_template = read_template_from_file(f'{self.project_root_dir}/templates/main_fastapi.jinja2')
-        app_code = app_template.render(resources=resources)
-        write_to_file(f'{self.project_root_dir}/generated/main.py', app_code)
+        entrypoint_template = read_template_from_file(f'{self.project_root_dir}/templates/fastapi_entrypoint.jinja2')
+        entrypoint_code = entrypoint_template.render(resources=resources)
+        write_to_file(f'{self.project_root_dir}/generated/api.py', entrypoint_code)
+
+        # TODO: separate in different function and add configuration of port, host etc
+
+        main_template = read_template_from_file(f'{self.project_root_dir}/templates/main_fastapi.jinja2')
+        main_code = main_template.render(resources=resources)
+        write_to_file(f'{self.project_root_dir}/generated/main.py', main_code)
 
     def generate(self):
         self.create_utils_file(self.resources)

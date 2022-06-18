@@ -5,6 +5,7 @@ from networkx import DiGraph, find_cycle
 from keyword import iskeyword
 from config import MAX_RESOURCES_ALLOWED
 
+
 def generic_alphanumeric_validator(element: str, element_name: str) -> None:
     if not element.replace('_', '').isalnum():
         raise ValueError(f"A(n) {element_name} can only contain alphabetic characters and '_'.")
@@ -28,12 +29,15 @@ def generic_alphanumeric_and_keyword_validator(element: str, element_name: str) 
 
 class Field(BaseModel, extra=Extra.forbid):
     name: constr(min_length=1, max_length=64)
-    type: Literal["integer", "string", "decimal", "boolean"]
+    type: Literal["integer", "string", "decimal", "boolean", "date"]
     length: Optional[int]
     nullable: bool
 
     @validator('length')
     def length_must_me_reasonable(cls, v, values):
+        if v is None:
+            return v
+
         if v > 255:
             raise ValueError(f"Length of a string field cannot be greater than 255 ('{values['name']}')!")
         elif v < 1:
@@ -153,7 +157,7 @@ class Input(BaseModel, extra=Extra.forbid):
 
     @validator('resources')
     def resource_list_cannot_be_empty(cls, v):
-        if(len(v)) == 0:
+        if (len(v)) == 0:
             raise ValueError("Input resource list cannot be empty!")
 
         return v
@@ -185,7 +189,6 @@ class Input(BaseModel, extra=Extra.forbid):
 
     @validator('resources')
     def check_for_invalid_relationships(cls, v):
-        # TODO: refactor because the function is too long
         tables_names = [x.table_name for x in v]
 
         for resource in v:
@@ -206,7 +209,8 @@ class Input(BaseModel, extra=Extra.forbid):
                     raise ValueError(f"Table '{resource.table_name}' has a relationship with a table that does not "
                                      f"exist in the given list of resources.")
 
-                if relation.reference_field not in [x.name for x in resource.fields] and relation.type != "MANY-TO-MANY":
+                if relation.reference_field not in [x.name for x in
+                                                    resource.fields] and relation.type != "MANY-TO-MANY":
                     raise ValueError(f"The referenced field should exist in '{resource.table_name}'!")
 
         return v

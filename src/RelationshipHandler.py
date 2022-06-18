@@ -34,14 +34,9 @@ class RelationshipHandler:
                 reference_field = [x for x in resource.fields if x.name == relation.reference_field][0] \
                     if relation.type != "MANY-TO-MANY" else None
 
-                self.relationships.add_edge(resource.table_name,
-                                            relation.table,
-                                            rel_type=relation.type,
-                                            foreign_key_name=fk_name,
-                                            parent=resource,
-                                            child=child,
-                                            referenced_field=reference_field
-                                            )
+                self.relationships.add_edge(resource.table_name, relation.table, rel_type=relation.type,
+                                            foreign_key_name=fk_name, parent=resource, child=child,
+                                            referenced_field=reference_field)
 
     def get_relationships_graph(self) -> DiGraph:
         return self.relationships
@@ -57,15 +52,9 @@ class RelationshipHandler:
             if rel_type == "MANY-TO-MANY":
                 self.handle_many_to_many(child_table, parent_table)
             elif rel_type == "ONE-TO-ONE":
-                create_fk_one_to_one(parent_table,
-                                     child_table,
-                                     referenced_field,
-                                     fk_name)
+                create_fk_one_to_one(parent_table, child_table, referenced_field, fk_name)
             elif rel_type == "ONE-TO-MANY":
-                create_fk_one_to_many(parent_table,
-                                      child_table,
-                                      referenced_field,
-                                      fk_name)
+                create_fk_one_to_many(parent_table, child_table, referenced_field, fk_name)
 
     def handle_many_to_many(self, child_table, parent_table):
         p_table_f = [x for x in parent_table.fields if x.name == parent_table.primary_key]
@@ -136,7 +125,6 @@ def create_fk_one_to_many(parent, child, reference_field, fk_name):
     fk = ForeignKey(field=fk_name, references=parent.table_name, reference_field=reference_field.name)
 
     length = reference_field.length if reference_field.type == "string" else None
-
     # it remains to have a dynamic type, not only integer but the type of the referenced field
     fk_field = Field(name=fk_name, type=reference_field.type, length=length, nullable=False)
     child.fields.append(fk_field)

@@ -1,0 +1,18 @@
+import uvicorn
+from fastapi import FastAPI
+from fastapi_hypermodel import HyperModel
+{% for resource in resources %}
+import {{ resource.name|lower }}_router
+{%  endfor %}
+
+
+app = FastAPI()
+
+{% for resource in resources %}
+app.include_router({{ resource.name|lower }}_router.router)
+{%  endfor %}
+
+HyperModel.init_app(app)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host='0.0.0.0', port=5555, reload=True, debug=True)
