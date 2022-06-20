@@ -35,8 +35,9 @@ def get_{{ entity.name|lower }}_by_{{ entity.primary_key }}({{ entity.primary_ke
     :param {{ entity.primary_key }}: TODO
     """
     {{ entity.name|lower }} = handler.get_collection("{{ entity.table_name|lower }}").find_one({
-        "{{ entity.primary_key }}": {{ entity.primary_key }}
-    })
+        "{{ entity.primary_key }}": {{ entity.primary_key }} },
+        { "_id" : 0 }
+    )
 
     if {{ entity.name|lower }} == {}:
         {{ entity.name|lower }} = None
@@ -51,7 +52,7 @@ def get_all_{{ entity.table_name|lower }}_with_filters(**kwargs):
     Wrapper for an ORM call that is retrieving all {{ entity.table_name|lower }} by {{ entity.primary_key|lower }}
     :param kwargs: the parameters by which the filters will be made
     """
-    return [x for x in handler.get_collection("{{ entity.table_name|lower }}").find({**kwargs})]
+    return [x for x in handler.get_collection("{{ entity.table_name|lower }}").find({**kwargs}, { "_id" : 0 })]
 
 
 {% endfor %}
@@ -85,9 +86,23 @@ def delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}({{ entity.p
 def insert_{{ entity.name|lower }}({{ entity.name|lower }}):
     """
     Wrapper for an ORM call that is creating a(n) {{ entity.name|lower }}.
-    :param kwargs: the attributes of the {{ entity.name }} that is to be created
+    :param {{ entity.name|lower }}: a dictionary representing the entity that is to be inserted
     """
     return handler.get_collection("{{ entity.table_name|lower }}").insert_one({{ entity.name|lower }})
+
+
+{% endfor %}
+
+
+{% for entity in entities %}
+def upsert_{{ entity.name|lower }}({{ entity.primary_key }}, {{ entity.name|lower }}):
+    """
+    Wrapper for an ORM call that is creating or replacing a(n) {{ entity.name|lower }}.
+    :param {{ entity.name|lower }}: a dictionary representing the entity that is to be inserted or replaced
+    """
+    return handler.get_collection("{{ entity.table_name|lower }}").replace_one({
+        "{{ entity.primary_key }}": {{ entity.primary_key }}
+    }, {{ entity.name|lower }}, upsert=True)
 
 
 {% endfor %}

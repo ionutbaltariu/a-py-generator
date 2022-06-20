@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from utils import JsonResponse
 from typing import List
-from model import get_all_{{ entity.table_name|lower }}_with_filters, get_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, insert_{{ entity.name|lower }}, update_{{ entity.name|lower }}
+from model import get_all_{{ entity.table_name|lower }}_with_filters, get_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, insert_{{ entity.name|lower }}, update_{{ entity.name|lower }}, upsert_{{ entity.name|lower }}
 from utils import GenericSuccess, get_error_body, {{ entity.name|upper }}_NOT_FOUND_BODY, GENERIC_SUCCESS_STATUS_BODY, CREATE_GENERIC_SUCCESS_STATUS_BODY
 from view import Error, {{ entity.name }}
 
@@ -74,8 +74,13 @@ def delete_{{ entity.name|lower }}({{ entity.primary_key }}: str):
     """
     try:
         db_response = delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}(str({{ entity.primary_key }}))
-        status_code = 200
-        response_body = GENERIC_SUCCESS_STATUS_BODY
+
+        if db_response.deleted_count > 0:
+            status_code = 200
+            response_body = GENERIC_SUCCESS_STATUS_BODY
+        else:
+            status_Code = 404
+            response_body = {{ NOT_FOUND }}
     except Exception as e:
         status_code = 500
         response_body = get_error_body(status_code, str(e), "EXCEPTION")
@@ -99,6 +104,36 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}):
         db_response = insert_{{ entity.name|lower }}({{ entity.name|lower }}_dict)
         status_code = 201
         response_body = CREATE_GENERIC_SUCCESS_STATUS_BODY
+    except Exception as e:
+        status_code = 500
+        response_body = get_error_body(status_code, str(e), "EXCEPTION")
+
+    return JsonResponse(status_code=status_code, content=response_body)
+
+
+@router.put("/api/{{ entity.table_name|lower }}/{% raw %}{{% endraw %}{{ entity.primary_key }}{% raw %}}{% endraw %}",
+            responses={200: {"model": GenericSuccess},
+                       201: {"model": GenericSuccess},
+                       500: {"model": Error}},
+            response_model=GenericSuccess,
+            tags=[{{ entity.table_name|lower|tojson }}])
+def put_{{ entity.name|lower }}({{ entity.primary_key }}: str, {{ entity.name|lower }}: {{ entity.name }}):
+    """
+    Method that handles a PUT request for a(n) {{ entity.name|lower }} by its '{{ entity.primary_key }}' field.
+    Creates the {{ entity.name|lower }} if it doesn't already exist.
+    """
+    request_body = {{ entity.name|lower }}.dict()
+    del request_body["links"]
+
+    try:
+        db_response = upsert_{{ entity.name|lower }}({{ entity.primary_key }}, request_body)
+
+        if db_response.modified_count > 0:
+            status_code = 200
+            response_body = GENERIC_SUCCESS_STATUS_BODY
+        else:
+            status_code = 201
+            response_body = CREATE_GENERIC_SUCCESS_STATUS_BODY
     except Exception as e:
         status_code = 500
         response_body = get_error_body(status_code, str(e), "EXCEPTION")
