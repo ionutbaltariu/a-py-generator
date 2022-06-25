@@ -11,8 +11,11 @@ from DockerGenerator import DockerGenerator
 from FastAPIGenerator import FastAPIGenerator
 from SQLGenerator import SQLGenerator
 from RequirementsGenerator import RequirementsGenerator
+from StructureGenerator import StructureGenerator
 from view import Input
-from utils import get_project_root
+from pathlib import Path
+
+project_root = Path(__file__).parent.parent
 
 app = FastAPI(
     title="A Py Generator - Code Generation As A Service",
@@ -46,26 +49,28 @@ def zipfiles(path):
 
 @app.post("/api/generate/")
 def read_root(generation_metadata: Input):
-    print(generation_metadata)
     generation_id = uuid.uuid4()
     r = RelationshipHandler(generation_metadata.resources)
     r.execute()
     resources = [resource.dict() for resource in r.resources]
     generators = []
     db_type = generation_metadata.options.database_options.db_type
+    db_username = generation_metadata.options.database_options.db_username
+    db_password = generation_metadata.options.database_options.db_password
+    db_port = generation_metadata.options.database_options.db_port
 
+    generators.append(StructureGenerator(generation_id))
     if db_type == "MariaDB":
         generators.append(SQLAlchemyGenerator(resources, generation_id))
         generators.append(SQLGenerator(resources, generation_id))
     elif db_type == "MongoDB":
-        generators.append(MongoGenerator(resources, generation_id))
-
+        generators.append(MongoGenerator(resources, generation_id, db_username, db_password, db_port))
     generators.append(FastAPIGenerator(resources, generation_id, type=db_type))
     generators.append(PydanticGenerator(resources, generation_id))
-    generators.append(DockerGenerator(generation_id))
+    generators.append(DockerGenerator(generation_id, resources, generation_metadata.options.database_options.dict()))
     generators.append(RequirementsGenerator(generation_id))
 
     for generator in generators:
         generator.generate()
 
-    return zipfiles(f'{get_project_root()}/{generation_id}')
+    return zipfiles(os.path.join(project_root, str(generation_id)))

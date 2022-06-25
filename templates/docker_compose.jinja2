@@ -1,14 +1,32 @@
 version: "3.7"
 
 services:
+  {% if options["db_type"] == "MariaDB" %}
   mariadb:
     image: mariadb
-    container_name: 'generated_app'
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: {{ options["db_password"]  }}
 
     volumes:
       - ./:/docker-entrypoint-initdb.d
     ports:
-      - 3306:3306
+      - {{ options["db_port"] }}:{{ options["db_port"] }}
+  {% elif options["db_type"] == "MongoDB" %}
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=generated
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD={{ options["db_password"] }}
+    ports:
+      - {{ options["db_port"] }}:{{ options["db_port"] }}
+  {% endif %}
+  {% if redis_needed %}
+  redis:
+    image: 'bitnami/redis:latest'
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+  {% endif %}

@@ -1,5 +1,4 @@
 from Generator import ResourceBasedGenerator
-from utils import read_template_from_file, write_to_file
 from dataclasses import dataclass
 from typing import List
 
@@ -68,6 +67,7 @@ class Table:
 class SQLGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid):
         super().__init__(resources, generation_uid)
+        self.sql_template = self.read_template_from_file('sql.jinja2')
 
     def generate(self) -> None:
         """
@@ -94,6 +94,5 @@ class SQLGenerator(ResourceBasedGenerator):
                                               foreign_keys=temp_fks,
                                               primary_key=resource['primary_key']))
 
-        sql_template = read_template_from_file(f'{self.project_root_dir}/templates/sql.jinja2')
-        sql_code = sql_template.render(tables=tables_to_be_created)
-        write_to_file(f'{self.generation_path}/create_db_and_tables.sql', sql_code)
+        sql_code = self.sql_template.render(tables=tables_to_be_created)
+        self.write_to_gen_path('create_db_and_tables.sql', sql_code)

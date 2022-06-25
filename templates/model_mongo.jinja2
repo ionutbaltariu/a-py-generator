@@ -7,7 +7,7 @@ class MongoHandler:
                  database: str,
                  username={{ username|tojson }},
                  password={{ password|tojson }},
-                 hostname={{ hostname|tojson }},
+                 hostname='localhost',
                  port={{ port }},
                  connection_retries=3):
         connection_string = f"mongodb://{username}:{password}@{hostname}:{port}"

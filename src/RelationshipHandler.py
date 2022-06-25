@@ -1,4 +1,4 @@
-from view import Resource, ForeignKey, Field, Unique, Relationship
+from view import Resource, ForeignKey, ResourceField, Unique, Relationship
 from typing import List
 from networkx import DiGraph, find_cycle, exception
 
@@ -78,9 +78,9 @@ class RelationshipHandler:
             params2 = {
                 "type": c_table_f[0].type
             }
-        fields = [Field(name=f"id", type="integer", nullable=False),
-                  Field(name=f"{parent_table.primary_key}", nullable=False, **params),
-                  Field(name=f"{child_table.primary_key}",  nullable=False, **params2)]
+        fields = [ResourceField(name=f"id", type="integer", nullable=False),
+                  ResourceField(name=f"{parent_table.primary_key}", nullable=False, **params),
+                  ResourceField(name=f"{child_table.primary_key}", nullable=False, **params2)]
         table_name = f"{parent_table.table_name}_{child_table.table_name}"
         # TODO: when support for composite primary keys will be added, also change here
         link_table = Resource(name=table_name, table_name=table_name, fields=fields, primary_key="id")
@@ -126,7 +126,7 @@ def create_fk_one_to_many(parent, child, reference_field, fk_name):
 
     length = reference_field.length if reference_field.type == "string" else None
     # it remains to have a dynamic type, not only integer but the type of the referenced field
-    fk_field = Field(name=fk_name, type=reference_field.type, length=length, nullable=False)
+    fk_field = ResourceField(name=fk_name, type=reference_field.type, length=length, nullable=False)
     child.fields.append(fk_field)
 
     if not child.foreign_keys:

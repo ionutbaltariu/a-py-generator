@@ -16,4 +16,4 @@ class RequirementsGenerator(Generator):
         super().__init__(generation_uid)
 
     def generate(self) -> None:
-        execute_bash_commands(["python3 -m pip install pipreqs", f"pipreqs {self.generation_path}"])
+        execute_bash_commands(["python3 -m pip install pipreqs", f"pipreqs {self.source_code_path}"])

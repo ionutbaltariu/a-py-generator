@@ -1,4 +1,3 @@
-from utils import read_template_from_file, write_to_file
 from Generator import ResourceBasedGenerator
 from typing import List
 
@@ -7,32 +6,35 @@ class FastAPIGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid, type: str):
         super().__init__(resources, generation_uid)
         self.type = type
+        self.utils_template = self.read_template_from_file('utils.jinja2')
+        self.router_template_mariadb = self.read_template_from_file('router_with_sql.jinja2')
+        self.router_template_mongodb = self.read_template_from_file('router_with_mongo.jinja2')
+        self.entrypoint_template = self.read_template_from_file('fastapi_entrypoint.jinja2')
+        self.main_app_template = self.read_template_from_file('main_fastapi.jinja2')
 
     def create_utils_file(self, resources: List[dict]):
-        utils_template = read_template_from_file(f'{self.project_root_dir}/templates/utils.jinja2')
-        utils_code = utils_template.render(resources=resources)
-        write_to_file(f'{self.generation_path}/utils.py', utils_code)
+        utils_code = self.utils_template.render(resources=resources)
+        self.write_to_src('utils.py', utils_code)
 
     def create_routers(self, resources: List[dict]):
         if self.type == "MariaDB":
-            router_template = read_template_from_file(f'{self.project_root_dir}/templates/router_with_sql.jinja2')
-        elif self.type == "MongoDB":
-            router_template = read_template_from_file(f'{self.project_root_dir}/templates/router_with_mongo.jinja2')
+            router_template = self.router_template_mariadb
+        else:
+            router_template = self.router_template_mongodb
 
         for resource in resources:
-            router_code = router_template.render(entity=resource)
-            write_to_file(f'{self.generation_path}/{resource["name"].lower()}_router.py', router_code)
+            caching_enabled = resource.get("options").get("api_caching_enabled")
+            router_code = router_template.render(entity=resource, caching_enabled=caching_enabled)
+            self.write_to_src(f'{resource["name"].lower()}_router.py', router_code)
 
     def create_main_app(self, resources: List[dict]):
-        entrypoint_template = read_template_from_file(f'{self.project_root_dir}/templates/fastapi_entrypoint.jinja2')
-        entrypoint_code = entrypoint_template.render(resources=resources)
-        write_to_file(f'{self.generation_path}/api.py', entrypoint_code)
+        entrypoint_code = self.entrypoint_template.render(resources=resources)
+        self.write_to_src('api.py', entrypoint_code)
 
-        # TODO: separate in different function and add configuration of port, host etc
+        # TODO: separate in different functions and add configuration of port, host etc
 
-        main_template = read_template_from_file(f'{self.project_root_dir}/templates/main_fastapi.jinja2')
-        main_code = main_template.render(resources=resources)
-        write_to_file(f'{self.generation_path}/main.py', main_code)
+        main_code = self.main_app_template.render(resources=resources)
+        self.write_to_src('main.py', main_code)
 
     def generate(self):
         self.create_utils_file(self.resources)

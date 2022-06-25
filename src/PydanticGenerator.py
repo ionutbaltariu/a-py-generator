@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-from utils import read_template_from_file, write_to_file
 from Generator import ResourceBasedGenerator
 
 pseudocode_to_pydantic = {
@@ -29,6 +28,7 @@ class PydanticResource:
 class PydanticGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_path):
         super().__init__(resources, generation_path)
+        self.pydantic_template = self.read_template_from_file('pydantic.jinja2')
 
     def generate(self) -> None:
         resources = []
@@ -46,8 +46,7 @@ class PydanticGenerator(ResourceBasedGenerator):
                                               resource["primary_key"],
                                               fields))
 
-        pydantic_template = read_template_from_file(f'{self.project_root_dir}/templates/pydantic.jinja2')
-        pydantic_code = pydantic_template.render(resources=resources)
-        write_to_file(f'{self.generation_path}/view.py', pydantic_code)
+        pydantic_code = self.pydantic_template.render(resources=resources)
+        self.write_to_src('view.py', pydantic_code)
 
 

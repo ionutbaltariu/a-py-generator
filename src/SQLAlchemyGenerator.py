@@ -1,4 +1,3 @@
-from utils import read_template_from_file, write_to_file
 from dataclasses import dataclass
 from typing import List
 from Generator import ResourceBasedGenerator
@@ -83,18 +82,19 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid):
         super().__init__(resources, generation_uid)
         self.db_connection_config = ConnectionConfig()
+        self.db_conn_template = self.read_template_from_file('db_conn.jinja2')
+        self.sqlalchemy_template = self.read_template_from_file('sqlalchemy_model.jinja2')
+        self.model_template = self.read_template_from_file('model_sql.jinja2')
 
     def generate_connection_from_template(self) -> None:
         """
         Method that generates a database connection from a given configuration.
         """
-        db_conn_template = read_template_from_file(f'{self.project_root_dir}/templates/db_conn.jinja2')
-        db_conn_code = db_conn_template.render(cfg=self.db_connection_config)
-        write_to_file(f'{self.generation_path}/db.py', db_conn_code)
+        db_conn_code = self.db_conn_template.render(cfg=self.db_connection_config)
+        self.write_to_src('db.py', db_conn_code)
 
     def generate_sqlalchemy_classes(self) -> None:
         # TODO: Refactor down to small, understandable pieces
-        sqlalchemy_template = read_template_from_file(f"{self.project_root_dir}/templates/sqlalchemy_model_sql.jinja2")
         for resource in self.resources:
             fields = []
 
@@ -113,28 +113,30 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
                 fields.append(Field(field["name"], field_attributes))
 
             uniques = resource["uniques"] if "uniques" in resource else None
-            relationships = resource["relationships"] if "relationships" in resource else None
+
             # getting the name of the referenced resource by the table
             # can be refactored by handling relationships with referenced to other resources instead of tables
-            for rel in relationships:
-                rel["resource"] = [x for x in self.resources
-                                   if x.get("table_name") == rel.get("table")][0].get("name")
+            relationships = resource.get("relationships")
 
-            sqlalchemy_code = sqlalchemy_template.render(resource=Resource(resource["name"],
-                                                                           resource["table_name"],
-                                                                           fields,
-                                                                           uniques,
-                                                                           relationships))
-            write_to_file(f'{self.generation_path}/{resource["name"]}.py', sqlalchemy_code)
+            if relationships:
+                for rel in relationships:
+                    rel["resource"] = [x for x in self.resources
+                                       if x.get("table_name") == rel.get("table")][0].get("name")
+
+            sqlalchemy_code = self.sqlalchemy_template.render(resource=Resource(resource["name"],
+                                                                                resource["table_name"],
+                                                                                fields,
+                                                                                uniques,
+                                                                                relationships))
+            self.write_to_src(f'{resource["name"]}.py', sqlalchemy_code)
 
     def generate_model_code(self) -> None:
         """
         Method that triggers the 'model.py' code generation - file contains code that's used to
         perform database operations
         """
-        model_template = read_template_from_file(f'{self.project_root_dir}/templates/model_sql.jinja2')
-        model_code = model_template.render(entities=self.resources)
-        write_to_file(f'{self.generation_path}/model.py', model_code)
+        model_code = self.model_template.render(entities=self.resources)
+        self.write_to_src('model.py', model_code)
 
     def generate(self):
         self.generate_connection_from_template()

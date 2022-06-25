@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, validator, Extra
+from pydantic import BaseModel, constr, validator, Extra, Field
 from typing import List, Optional, Literal
 from keyword import iskeyword
 from config import MAX_RESOURCES_ALLOWED
@@ -25,7 +25,7 @@ def generic_alphanumeric_and_keyword_validator(element: str, element_name: str) 
     string_must_not_start_with_number_verifier(element, element_name)
 
 
-class Field(BaseModel, extra=Extra.forbid):
+class ResourceField(BaseModel, extra=Extra.forbid):
     name: constr(min_length=1, max_length=64)
     type: Literal["integer", "string", "decimal", "boolean", "date"]
     length: Optional[int]
@@ -68,41 +68,52 @@ class ForeignKey(BaseModel, extra=Extra.forbid):
 
 
 class DatabaseOptions(BaseModel, extra=Extra.forbid):
-    db_type: Literal["MariaDB", "MongoDB"]
-    db_username: Optional[constr(min_length=1, max_length=64)]
-    db_password: Optional[constr(min_length=1, max_length=64)]
-    db_hostname: Optional[constr(min_length=1, max_length=64)]
-    db_port: Optional[int]
+    db_type: Literal["MariaDB", "MongoDB"] = Field(default="MariaDB")
+    db_username: Optional[constr(min_length=1, max_length=64)] = Field(default="root")
+    db_password: Optional[constr(min_length=1, max_length=64)] = Field(default="generated_password")
+    db_port: Optional[int] = Field(default=3306)
 
     @validator("db_port")
     def validate_port(cls, port):
-        if port > 65535:
-            raise ValueError(f"A port can have a maximum value of 65535!")
-        elif port < 0:
-            raise ValueError(f"Please provide a positive number for the port.")
-        return port
+        if port is not None:
+            if port > 65535:
+                raise ValueError(f"A port can have a maximum value of 65535!")
+            elif port < 0:
+                raise ValueError(f"Please provide a positive number for the port.")
+            return port
+        else:
+            return port or 3306
 
 
 class ProjectMetadata(BaseModel, extra=Extra.forbid):
-    title: constr(min_length=1, max_length=64)
-    description: constr(min_length=1, max_length=512)
-    version: constr(min_length=1, max_length=8)
+    title: constr(min_length=1, max_length=64) = Field(default="Generated Application")
+    description: constr(min_length=1, max_length=512) = Field(default="Generated with a-py-generator")
+    version: constr(min_length=1, max_length=8) = Field(default="0.0.1")
     # TODO: de completat cu alte metadate pentru proiectul FastAPI
 
 
 class Options(BaseModel, extra=Extra.forbid):
-    database_options: Optional[DatabaseOptions]
-    project_metadata: Optional[ProjectMetadata]
+    database_options: Optional[DatabaseOptions] = Field(default=DatabaseOptions())
+    project_metadata: Optional[ProjectMetadata] = Field(default=ProjectMetadata())
+
+
+class ResourceOptions(BaseModel, extra=Extra.forbid):
+    api_caching_enabled: Optional[bool] = Field(default=False)
+    prevent_create_generation: Optional[bool] = Field(default=False)
+    prevent_retrieve_generation: Optional[bool] = Field(default=False)
+    prevent_update_generation: Optional[bool] = Field(default=False)
+    prevent_delete_generation: Optional[bool] = Field(default=False)
 
 
 class Resource(BaseModel, extra=Extra.forbid):
     name: constr(min_length=1, max_length=64)
     table_name: constr(min_length=1, max_length=64)
-    fields: List[Field]
+    fields: List[ResourceField]
     primary_key: constr(min_length=1, max_length=64)
     uniques: Optional[List[Unique]]
     relationships: Optional[List[Relationship]]
     foreign_keys: Optional[List[ForeignKey]]
+    options: Optional[ResourceOptions] = Field(default=ResourceOptions())
 
     @validator('fields')
     def resource_must_not_have_duplicate_fields(cls, v):
@@ -180,7 +191,7 @@ class Resource(BaseModel, extra=Extra.forbid):
 
 class Input(BaseModel, extra=Extra.forbid):
     resources: List[Resource]
-    options: Optional[Options]
+    options: Optional[Options] = Field(default=Options())
 
     @validator('resources')
     def resource_list_cannot_be_empty(cls, v):
