@@ -32,7 +32,7 @@ def get_{{ entity.table_name|lower }}(page: int = 1, items_per_page: int = 15):
     try:
         db_response = get_all_{{ entity.table_name|lower }}_with_filters()
         for {{ entity.name|lower }} in db_response:
-            {{ entity.name|lower }}_list.append({{ entity.name|lower }})
+            {{ entity.name|lower }}_list.append({{ entity.name }}(**{{ entity.name|lower }}).dict())
         response_body = {{ entity.name|lower }}_list[(page - 1) * items_per_page:page * items_per_page]
         status_code = 200
     except Exception as e:
@@ -62,7 +62,7 @@ def get_{{ entity.name|lower }}({{ entity.primary_key }}: {{ entity.pk_type }}):
             response_body = {{ NOT_FOUND }}
         else:
             status_code = 200
-            response_body = db_response
+            response_body = {{ entity.name }}(**db_response).dict()
     except Exception as e:
         status_code = 500
         response_body = get_error_body(status_code, str(e), "EXCEPTION")
