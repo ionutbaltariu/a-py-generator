@@ -7,10 +7,9 @@ class MongoHandler:
                  database: str,
                  username={{ username|tojson }},
                  password={{ password|tojson }},
-                 hostname='localhost',
                  port={{ port }},
                  connection_retries=3):
-        connection_string = f"mongodb://{username}:{password}@{hostname}:{port}"
+        connection_string = f"mongodb://{username}:{password}@database:{port}"
         self.connection = MongoClient(connection_string)
         self.database = self.connection[database]
         connection_ok_flag = True if self.database.command('ping')['ok'] == 1.0 else False

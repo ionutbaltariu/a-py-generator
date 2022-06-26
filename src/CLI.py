@@ -2,7 +2,7 @@ from SQLAlchemyGenerator import SQLAlchemyGenerator
 from PydanticGenerator import PydanticGenerator
 from FastAPIGenerator import FastAPIGenerator
 from SQLGenerator import SQLGenerator
-from DockerGenerator import DockerGenerator
+from DockerComposeGenerator import DockerComposeGenerator
 from RelationshipHandler import RelationshipHandler
 from view import Input
 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     pydantic_generator = PydanticGenerator(resources)
     fastapi_generator = FastAPIGenerator(resources)
     sql_generator = SQLGenerator(resources)
-    docker_generator = DockerGenerator()
+    docker_generator = DockerComposeGenerator()
 
     docker_generator.generate()
     sql_generator.generate()

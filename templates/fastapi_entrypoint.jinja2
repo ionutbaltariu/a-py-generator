@@ -1,18 +1,25 @@
-import uvicorn
 from fastapi import FastAPI
 from fastapi_hypermodel import HyperModel
 {% for resource in resources %}
 import {{ resource.name|lower }}_router
 {%  endfor %}
-
+{% if caching_enabled -%}
+import aioredis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+{% endif %}
 
 app = FastAPI()
-
 {% for resource in resources %}
 app.include_router({{ resource.name|lower }}_router.router)
 {%  endfor %}
 
 HyperModel.init_app(app)
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host='0.0.0.0', port=5555, reload=True, debug=True)
+
+{% if caching_enabled -%}
+@app.on_event("startup")
+async def startup():
+    redis = aioredis.from_url("redis://redis", encoding="utf8", decode_responses=True)
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+{% endif %}

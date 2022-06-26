@@ -75,22 +75,27 @@ class DatabaseOptions(BaseModel, extra=Extra.forbid):
 
     @validator("db_port")
     def validate_port(cls, port):
-        if port is not None:
-            if port > 65535:
-                raise ValueError(f"A port can have a maximum value of 65535!")
-            elif port < 0:
-                raise ValueError(f"Please provide a positive number for the port.")
-            return port
-        else:
-            return port or 3306
+        if port > 65535:
+            raise ValueError(f"A port can have a maximum value of 65535!")
+        elif port < 0:
+            raise ValueError(f"Please provide a positive number for the port.")
+        return port
 
 
 class ProjectMetadata(BaseModel, extra=Extra.forbid):
+    application_port: int = Field(default=5555)
     title: constr(min_length=1, max_length=64) = Field(default="Generated Application")
     description: constr(min_length=1, max_length=512) = Field(default="Generated with a-py-generator")
     version: constr(min_length=1, max_length=8) = Field(default="0.0.1")
     # TODO: de completat cu alte metadate pentru proiectul FastAPI
 
+    @validator("application_port")
+    def validate_port(cls, application_port):
+        if application_port > 65535:
+            raise ValueError(f"A port can have a maximum value of 65535!")
+        elif application_port < 0:
+            raise ValueError(f"Please provide a positive number for the port.")
+        return application_port
 
 class Options(BaseModel, extra=Extra.forbid):
     database_options: Optional[DatabaseOptions] = Field(default=DatabaseOptions())

@@ -1,4 +1,4 @@
 import uvicorn
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host='0.0.0.0', port=5555, reload=True, debug=True)
+    uvicorn.run("api:app", host='0.0.0.0', port={{ application_port }}, reload=True, debug=True)

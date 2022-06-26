@@ -1,15 +1,12 @@
-{% if caching_enabled -%}
-import aioredis
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache
-{% endif %}
 from fastapi import APIRouter
 from utils import JsonResponse
 from typing import List
 from model import get_all_{{ entity.table_name|lower }}_with_filters, get_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}, insert_{{ entity.name|lower }}, update_{{ entity.name|lower }}, upsert_{{ entity.name|lower }}
 from utils import GenericSuccess, get_error_body, {{ entity.name|upper }}_NOT_FOUND_BODY, GENERIC_SUCCESS_STATUS_BODY, CREATE_GENERIC_SUCCESS_STATUS_BODY
 from view import Error, {{ entity.name }}
+{% if caching_enabled %}
+from fastapi_cache.decorator import cache
+{% endif %}
 
 router = APIRouter()
 {% macro not_found() -%}
@@ -17,13 +14,6 @@ router = APIRouter()
 {%- endmacro %}
 
 {% set NOT_FOUND = not_found() %}
-
-{% if caching_enabled -%}
-@app.on_event("startup")
-async def startup():
-    redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-{% endif %}
 
 {% if caching_enabled -%}
 @cache(expire=60)
@@ -60,12 +50,12 @@ def get_{{ entity.table_name|lower }}(page: int = 1, items_per_page: int = 15):
                        500: {"model": Error}},
             response_model={{ entity.name }},
             tags=[{{ entity.table_name|lower|tojson }}])
-def get_{{ entity.name|lower }}({{ entity.primary_key }}: str):
+def get_{{ entity.name|lower }}({{ entity.primary_key }}: {{ entity.pk_type }}):
     """
     Method that handles a GET request for a {{ entity.table_name|lower }} by the '{{ entity.primary_key }}' field.
     """
     try:
-        db_response = get_{{ entity.name|lower }}_by_{{ entity.primary_key }}(str({{ entity.primary_key }}))
+        db_response = get_{{ entity.name|lower }}_by_{{ entity.primary_key }}({{ entity.primary_key }})
 
         if db_response is None:
             status_code = 404
@@ -86,18 +76,18 @@ def get_{{ entity.name|lower }}({{ entity.primary_key }}: str):
                           404: {"model": Error},
                           200: {"model": GenericSuccess}},
                tags=[{{ entity.table_name|lower|tojson }}])
-def delete_{{ entity.name|lower }}({{ entity.primary_key }}: str):
+def delete_{{ entity.name|lower }}({{ entity.primary_key }}: {{ entity.pk_type }}):
     """
     Method that handles a DELETE request for a {{ entity.table_name|lower }} by the '{{ entity.primary_key }}' field.
     """
     try:
-        db_response = delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}(str({{ entity.primary_key }}))
+        db_response = delete_{{ entity.name|lower }}_by_{{ entity.primary_key|lower }}({{ entity.primary_key }})
 
         if db_response.deleted_count > 0:
             status_code = 200
             response_body = GENERIC_SUCCESS_STATUS_BODY
         else:
-            status_Code = 404
+            status_code = 404
             response_body = {{ NOT_FOUND }}
     except Exception as e:
         status_code = 500
@@ -135,7 +125,7 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}):
                        500: {"model": Error}},
             response_model=GenericSuccess,
             tags=[{{ entity.table_name|lower|tojson }}])
-def put_{{ entity.name|lower }}({{ entity.primary_key }}: str, {{ entity.name|lower }}: {{ entity.name }}):
+def put_{{ entity.name|lower }}({{ entity.primary_key }}: {{ entity.pk_type }}, {{ entity.name|lower }}: {{ entity.name }}):
     """
     Method that handles a PUT request for a(n) {{ entity.name|lower }} by its '{{ entity.primary_key }}' field.
     Creates the {{ entity.name|lower }} if it doesn't already exist.

@@ -79,9 +79,12 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
 
 class SQLAlchemyGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict], generation_uid):
+    def __init__(self, resources: List[dict], generation_uid, db_username, db_password, db_port):
         super().__init__(resources, generation_uid)
-        self.db_connection_config = ConnectionConfig()
+        self.db_connection_config = ConnectionConfig(db_user=db_username,
+                                                     db_user_pass=db_password,
+                                                     db_host='database',
+                                                     db_port=db_port)
         self.db_conn_template = self.read_template_from_file('db_conn.jinja2')
         self.sqlalchemy_template = self.read_template_from_file('sqlalchemy_model.jinja2')
         self.model_template = self.read_template_from_file('model_sql.jinja2')
