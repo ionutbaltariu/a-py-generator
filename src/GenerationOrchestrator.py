@@ -1,0 +1,49 @@
+from utils import workaround
+from view import Input
+from PydanticGenerator import PydanticGenerator
+from RelationshipHandler import RelationshipHandler
+from SQLAlchemyGenerator import SQLAlchemyGenerator
+from MongoGenerator import MongoGenerator
+from DockerComposeGenerator import DockerComposeGenerator
+from FastAPIGenerator import FastAPIGenerator
+from SQLGenerator import SQLGenerator
+from RequirementsGenerator import RequirementsGenerator
+from StructureGenerator import StructureGenerator
+from DockerfileGenerator import DockerfileGenerator
+
+
+class GenerationOrchestrator:
+    def __init__(self, generation_metadata: Input, generation_id: str, project_root: str):
+        self.generation_metadata = generation_metadata
+        self.generation_id = generation_id
+        self.project_root = project_root
+
+    def generate(self):
+        r = RelationshipHandler(self.generation_metadata.resources)
+        r.execute()
+        resources = [resource.dict() for resource in r.resources]
+        generators = []
+        options = self.generation_metadata.options
+        db_options = options.database_options
+
+        generators.append(StructureGenerator(self.generation_id))
+
+        if db_options.db_type == "MariaDB":
+            generators.append(SQLAlchemyGenerator(resources, self.generation_id, options))
+            generators.append(SQLGenerator(resources, self.generation_id))
+        else:
+            generators.append(MongoGenerator(resources, self.generation_id, options))
+
+        generators.append(FastAPIGenerator(resources, self.generation_id, options))
+        generators.append(PydanticGenerator(resources, self.generation_id))
+        generators.append(RequirementsGenerator(self.generation_id))
+
+        if options.run_main_app_in_container:
+            generators.append(DockerfileGenerator(resources, self.generation_id, options))
+
+        generators.append(DockerComposeGenerator(self.generation_id, resources, options))
+
+        for generator in generators:
+            generator.generate()
+
+        workaround(self.project_root, self.generation_id, db_options.db_type)

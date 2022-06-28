@@ -1,18 +1,10 @@
 import io
 import os
-import zipfile
 import uuid
+import zipfile
 from fastapi import FastAPI, Response
-from PydanticGenerator import PydanticGenerator
-from RelationshipHandler import RelationshipHandler
-from SQLAlchemyGenerator import SQLAlchemyGenerator
-from MongoGenerator import MongoGenerator
-from DockerComposeGenerator import DockerComposeGenerator
-from FastAPIGenerator import FastAPIGenerator
-from SQLGenerator import SQLGenerator
-from RequirementsGenerator import RequirementsGenerator
-from StructureGenerator import StructureGenerator
-from DockerfileGenerator import DockerfileGenerator
+
+from src.GenerationOrchestrator import GenerationOrchestrator
 from view import Input
 from pathlib import Path
 
@@ -50,47 +42,7 @@ def zip_generated_code(path):
 @app.post("/api/generate/")
 def generate_app(generation_metadata: Input):
     generation_id = str(uuid.uuid4())
-    r = RelationshipHandler(generation_metadata.resources)
-    r.execute()
-    resources = [resource.dict() for resource in r.resources]
-    generators = []
-    options = generation_metadata.options
-    db_options = options.database_options
-
-    generators.append(StructureGenerator(generation_id))
-
-    if db_options.db_type == "MariaDB":
-        generators.append(SQLAlchemyGenerator(resources, generation_id, options))
-        generators.append(SQLGenerator(resources, generation_id))
-    else:
-        generators.append(MongoGenerator(resources, generation_id, options))
-
-    generators.append(FastAPIGenerator(resources, generation_id, options))
-    generators.append(PydanticGenerator(resources, generation_id))
-    generators.append(RequirementsGenerator(generation_id))
-
-    if options.run_main_app_in_container:
-        generators.append(DockerfileGenerator(resources, generation_id, options))
-
-    generators.append(DockerComposeGenerator(generation_id, resources, options))
-
-    for generator in generators:
-        generator.generate()
-
-    # pipreqs does not find mysql connector and fastapi_cache correctly
-
-    workaround(str(generation_id), db_options.db_type)
+    orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
+    orchestrator.generate()
 
     return zip_generated_code(os.path.join(project_root, generation_id))
-
-
-def workaround(generation_id: str, db_type: str):
-    requirements_txt = os.path.join(project_root, generation_id, "src", "requirements.txt")
-    with open(requirements_txt, "r") as f:
-        content = f.read()
-        content = content.replace("fastapi_cache==0.1.0", "fastapi-cache2==0.1.8")
-        if db_type == "MariaDB":
-            content += "mysql-connector-python==8.0.27"
-
-    with open(requirements_txt, "w") as f:
-        f.write(content)
