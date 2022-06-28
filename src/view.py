@@ -88,6 +88,8 @@ class ProjectMetadata(BaseModel, extra=Extra.forbid):
     description: constr(min_length=1,
                         max_length=PROJECT_DESCRIPTION_MAX_LENGTH) = Field(default="Generated with a-py-generator")
     version: constr(min_length=1, max_length=PROJECT_VERSION_MAX_LENGTH) = Field(default="0.0.1")
+    creator_name: constr(min_length=1, max_length=MAX_STR_LENGTH) = Field(default="")
+    creator_website: constr(min_length=1, max_length=MAX_STR_LENGTH) = Field(default="")
     # TODO: de completat cu alte metadate pentru proiectul FastAPI
 
 

@@ -14,6 +14,7 @@ class FastAPIGenerator(ResourceBasedGenerator):
         super().__init__(resources, generation_uid)
         self.type = options.database_options.db_type
         self.application_port = options.application_port
+        self.project_metadata = options.project_metadata.dict()
         self.utils_template = self.read_template_from_file('utils.jinja2')
         self.router_template_mariadb = self.read_template_from_file('router_with_sql.jinja2')
         self.router_template_mongodb = self.read_template_from_file('router_with_mongo.jinja2')
@@ -48,7 +49,8 @@ class FastAPIGenerator(ResourceBasedGenerator):
 
     def create_main_app(self):
         entrypoint_code = self.entrypoint_template.render(resources=self.resources,
-                                                          caching_enabled=self.at_least_one_cached_resource)
+                                                          caching_enabled=self.at_least_one_cached_resource,
+                                                          project_metadata=self.project_metadata)
         self.write_to_src('api.py', entrypoint_code)
 
         # TODO: separate in different functions and add configuration of port, host etc

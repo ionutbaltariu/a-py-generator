@@ -9,7 +9,22 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 {% endif %}
 
-app = FastAPI()
+app = FastAPI(
+    title="{{ project_metadata["title"] }}",
+    description="{{ project_metadata["description"] }}",
+    version="{{ project_metadata["version"] }}",
+    {% if project_metadata["creator_name"] != "" or project_metadata["creator_website"] != "" %}
+    contact={
+        {% if project_metadata["creator_name"] != "" %}
+        "name": "{{ project_metadata["creator_name"] }}",
+        {% endif %}
+        {% if project_metadata["creator_website"] != "" %}
+        "url": "{{ project_metadata["creator_website"] }}"
+        {% endif %}
+    }
+    {% endif %}
+)
+
 {% for resource in resources %}
 app.include_router({{ resource.name|lower }}_router.router)
 {%  endfor %}
