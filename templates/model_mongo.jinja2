@@ -1,3 +1,8 @@
+{% if main_app_in_container %}
+    {% set db_host = "database" %}
+{% else %}
+    {% set db_host = "localhost" %}
+{% endif %}
 from pymongo.collection import Collection
 from pymongo import MongoClient
 
@@ -9,7 +14,7 @@ class MongoHandler:
                  password={{ password|tojson }},
                  port={{ port }},
                  connection_retries=3):
-        connection_string = f"mongodb://{username}:{password}@database:{port}"
+        connection_string = f"mongodb://{username}:{password}@{{ db_host }}:{port}"
         self.connection = MongoClient(connection_string)
         self.database = self.connection[database]
         connection_ok_flag = True if self.database.command('ping')['ok'] == 1.0 else False

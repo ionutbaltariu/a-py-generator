@@ -1,5 +1,6 @@
 from Generator import ResourceBasedGenerator
 from typing import List
+from view import Options
 
 datatype_converter = {
     'string': 'str',
@@ -9,10 +10,10 @@ datatype_converter = {
 
 
 class FastAPIGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict], generation_uid, db_type: str, application_port: int):
+    def __init__(self, resources: List[dict], generation_uid, options: Options):
         super().__init__(resources, generation_uid)
-        self.type = db_type
-        self.application_port = application_port
+        self.type = options.database_options.db_type
+        self.application_port = options.application_port
         self.utils_template = self.read_template_from_file('utils.jinja2')
         self.router_template_mariadb = self.read_template_from_file('router_with_sql.jinja2')
         self.router_template_mongodb = self.read_template_from_file('router_with_mongo.jinja2')

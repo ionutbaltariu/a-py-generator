@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import List
 from Generator import ResourceBasedGenerator
+from view import Options
 
 
 # Adapter classes so that the dynamic parts of the templates can be replaced easier (with little processing)
-
 @dataclass
 class Field:
     name: str
@@ -79,12 +79,13 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
 
 class SQLAlchemyGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict], generation_uid, db_username, db_password, db_port):
+    def __init__(self, resources: List[dict], generation_uid, options: Options):
         super().__init__(resources, generation_uid)
-        self.db_connection_config = ConnectionConfig(db_user=db_username,
-                                                     db_user_pass=db_password,
-                                                     db_host='database',
-                                                     db_port=db_port)
+        host = 'database' if options.run_main_app_in_container else 'localhost'
+        self.db_connection_config = ConnectionConfig(db_user=options.database_options.db_username,
+                                                     db_user_pass=options.database_options.db_password,
+                                                     db_host= host,
+                                                     db_port=options.database_options.db_port)
         self.db_conn_template = self.read_template_from_file('db_conn.jinja2')
         self.sqlalchemy_template = self.read_template_from_file('sqlalchemy_model.jinja2')
         self.model_template = self.read_template_from_file('model_sql.jinja2')

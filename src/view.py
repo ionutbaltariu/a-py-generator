@@ -1,7 +1,8 @@
 from pydantic import BaseModel, constr, validator, Extra, Field
 from typing import List, Optional, Literal
 from keyword import iskeyword
-from config import MAX_RESOURCES_ALLOWED
+from config import MAX_RESOURCES_ALLOWED, MAX_STR_LENGTH, PASSWORD_LENGTH, PROJECT_DESCRIPTION_MAX_LENGTH, \
+    PROJECT_VERSION_MAX_LENGTH
 
 
 def generic_alphanumeric_validator(element: str, element_name: str) -> None:
@@ -26,7 +27,7 @@ def generic_alphanumeric_and_keyword_validator(element: str, element_name: str) 
 
 
 class ResourceField(BaseModel, extra=Extra.forbid):
-    name: constr(min_length=1, max_length=64)
+    name: constr(min_length=1, max_length=MAX_STR_LENGTH)
     type: Literal["integer", "string", "decimal", "boolean", "date"]
     length: Optional[int]
     nullable: bool
@@ -50,27 +51,27 @@ class ResourceField(BaseModel, extra=Extra.forbid):
 
 
 class Unique(BaseModel, extra=Extra.forbid):
-    name: constr(min_length=1, max_length=64)
-    unique_fields: List[constr(min_length=1, max_length=64)]
+    name: constr(min_length=1, max_length=MAX_STR_LENGTH)
+    unique_fields: List[constr(min_length=1, max_length=MAX_STR_LENGTH)]
 
 
 class Relationship(BaseModel, extra=Extra.forbid):
     type: Literal["ONE-TO-ONE", "ONE-TO-MANY", "MANY-TO-MANY"]
-    table: constr(min_length=1, max_length=64)
-    reference_field: Optional[constr(min_length=1, max_length=64)]
+    table: constr(min_length=1, max_length=MAX_STR_LENGTH)
+    reference_field: Optional[constr(min_length=1, max_length=MAX_STR_LENGTH)]
     role: Optional[Literal["Child", "Parent"]]
 
 
 class ForeignKey(BaseModel, extra=Extra.forbid):
-    field: constr(min_length=1, max_length=64)
-    references: constr(min_length=1, max_length=64)
-    reference_field: constr(min_length=1, max_length=64)
+    field: constr(min_length=1, max_length=MAX_STR_LENGTH)
+    references: constr(min_length=1, max_length=MAX_STR_LENGTH)
+    reference_field: constr(min_length=1, max_length=MAX_STR_LENGTH)
 
 
 class DatabaseOptions(BaseModel, extra=Extra.forbid):
     db_type: Literal["MariaDB", "MongoDB"] = Field(default="MariaDB")
-    db_username: Optional[constr(min_length=1, max_length=64)] = Field(default="root")
-    db_password: Optional[constr(min_length=1, max_length=64)] = Field(default="generated_password")
+    db_username: Optional[constr(min_length=1, max_length=MAX_STR_LENGTH)] = Field(default="root")
+    db_password: Optional[constr(min_length=1, max_length=PASSWORD_LENGTH)] = Field(default="generated_password")
     db_port: Optional[int] = Field(default=3306)
 
     @validator("db_port")
@@ -83,11 +84,18 @@ class DatabaseOptions(BaseModel, extra=Extra.forbid):
 
 
 class ProjectMetadata(BaseModel, extra=Extra.forbid):
-    application_port: int = Field(default=5555)
-    title: constr(min_length=1, max_length=64) = Field(default="Generated Application")
-    description: constr(min_length=1, max_length=512) = Field(default="Generated with a-py-generator")
-    version: constr(min_length=1, max_length=8) = Field(default="0.0.1")
+    title: constr(min_length=1, max_length=MAX_STR_LENGTH) = Field(default="Generated Application")
+    description: constr(min_length=1,
+                        max_length=PROJECT_DESCRIPTION_MAX_LENGTH) = Field(default="Generated with a-py-generator")
+    version: constr(min_length=1, max_length=PROJECT_VERSION_MAX_LENGTH) = Field(default="0.0.1")
     # TODO: de completat cu alte metadate pentru proiectul FastAPI
+
+
+class Options(BaseModel, extra=Extra.forbid):
+    database_options: Optional[DatabaseOptions] = Field(default=DatabaseOptions())
+    project_metadata: Optional[ProjectMetadata] = Field(default=ProjectMetadata())
+    run_main_app_in_container: bool = Field(default=True)
+    application_port: int = Field(default=5555)
 
     @validator("application_port")
     def validate_port(cls, application_port):
@@ -96,10 +104,6 @@ class ProjectMetadata(BaseModel, extra=Extra.forbid):
         elif application_port < 0:
             raise ValueError(f"Please provide a positive number for the port.")
         return application_port
-
-class Options(BaseModel, extra=Extra.forbid):
-    database_options: Optional[DatabaseOptions] = Field(default=DatabaseOptions())
-    project_metadata: Optional[ProjectMetadata] = Field(default=ProjectMetadata())
 
 
 class ResourceOptions(BaseModel, extra=Extra.forbid):
@@ -111,10 +115,10 @@ class ResourceOptions(BaseModel, extra=Extra.forbid):
 
 
 class Resource(BaseModel, extra=Extra.forbid):
-    name: constr(min_length=1, max_length=64)
-    table_name: constr(min_length=1, max_length=64)
+    name: constr(min_length=1, max_length=MAX_STR_LENGTH)
+    table_name: constr(min_length=1, max_length=MAX_STR_LENGTH)
     fields: List[ResourceField]
-    primary_key: constr(min_length=1, max_length=64)
+    primary_key: constr(min_length=1, max_length=MAX_STR_LENGTH)
     uniques: Optional[List[Unique]]
     relationships: Optional[List[Relationship]]
     foreign_keys: Optional[List[ForeignKey]]

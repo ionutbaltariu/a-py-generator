@@ -6,10 +6,10 @@ from jinja2 import Template
 
 
 class Generator(abc.ABC):
-    def __init__(self, generation_uid):
+    def __init__(self, generation_uid: str):
         self.project_root_dir = Path(__file__).parent.parent
         self.__generation_uid = generation_uid
-        self.generation_path = os.path.join(self.project_root_dir, str(self.__generation_uid))
+        self.generation_path = os.path.join(self.project_root_dir, self.__generation_uid)
         self.source_code_path = os.path.join(self.generation_path, 'src')
 
     @abc.abstractmethod

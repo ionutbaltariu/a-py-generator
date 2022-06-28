@@ -4,7 +4,7 @@ services:
   {% if options["db_type"] == "MariaDB" %}
   mariadb:
     image: mariadb
-    container_name: 'database'
+    container_name: '{{ db_host }}'
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: {{ options["db_password"]  }}
@@ -45,6 +45,7 @@ services:
     ports:
       - 6379:6379
   {% endif %}
+  {% if main_app_in_container %}
   generated_app:
     container_name: 'app'
     restart: always
@@ -54,6 +55,7 @@ services:
       - {{ application_port }}:{{ application_port }}
     networks:
       - generated_app_network
+  {% endif %}
 
 networks:
   generated_app_network:

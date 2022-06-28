@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+  generation_app:
+    container_name: 'generation_app'
+    restart: always
+    build:
+      context: .
+    ports:
+      - 5678:5678

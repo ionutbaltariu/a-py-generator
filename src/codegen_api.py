@@ -32,14 +32,13 @@ app = FastAPI(
 )
 
 
-def zipfiles(path):
+def zip_generated_code(path):
     s = io.BytesIO()
-    with zipfile.ZipFile(s, 'w') as zipf:
+    with zipfile.ZipFile(s, 'w') as zip_file:
         for root, dirs, files in os.walk(path):
             for file in files:
-                zipf.write(os.path.join(root, file),
-                           os.path.relpath(os.path.join(root, file),
-                                           os.path.join(path, '..')))
+                zip_file.write(os.path.join(root, file),
+                               os.path.relpath(os.path.join(root, file), os.path.join(path, '..')))
 
         resp = Response(s.getvalue(), media_type="application/x-zip-compressed", headers={
             'Content-Disposition': f'attachment;filename=result.zip'
@@ -49,43 +48,40 @@ def zipfiles(path):
 
 
 @app.post("/api/generate/")
-def read_root(generation_metadata: Input):
-    generation_id = uuid.uuid4()
+def generate_app(generation_metadata: Input):
+    generation_id = str(uuid.uuid4())
     r = RelationshipHandler(generation_metadata.resources)
     r.execute()
     resources = [resource.dict() for resource in r.resources]
     generators = []
-    db_type = generation_metadata.options.database_options.db_type
-    db_username = generation_metadata.options.database_options.db_username
-    db_password = generation_metadata.options.database_options.db_password
-    db_port = generation_metadata.options.database_options.db_port
-    application_port = generation_metadata.options.project_metadata.application_port
+    options = generation_metadata.options
+    db_options = options.database_options
 
     generators.append(StructureGenerator(generation_id))
-    if db_type == "MariaDB":
-        generators.append(SQLAlchemyGenerator(resources, generation_id, db_username, db_password, db_port))
-        generators.append(SQLGenerator(resources, generation_id))
-    elif db_type == "MongoDB":
-        generators.append(MongoGenerator(resources, generation_id, db_username, db_password, db_port))
 
-    generators.append(FastAPIGenerator(resources, generation_id, db_type, application_port))
+    if db_options.db_type == "MariaDB":
+        generators.append(SQLAlchemyGenerator(resources, generation_id, options))
+        generators.append(SQLGenerator(resources, generation_id))
+    else:
+        generators.append(MongoGenerator(resources, generation_id, options))
+
+    generators.append(FastAPIGenerator(resources, generation_id, options))
     generators.append(PydanticGenerator(resources, generation_id))
     generators.append(RequirementsGenerator(generation_id))
-    generators.append(DockerfileGenerator(resources, generation_id, application_port))
-    generators.append(DockerComposeGenerator(generation_id,
-                                             resources,
-                                             generation_metadata.options.database_options.dict(),
-                                             application_port
-                                             ))
+
+    if options.run_main_app_in_container:
+        generators.append(DockerfileGenerator(resources, generation_id, options))
+
+    generators.append(DockerComposeGenerator(generation_id, resources, options))
 
     for generator in generators:
         generator.generate()
 
     # pipreqs does not find mysql connector and fastapi_cache correctly
 
-    workaround(str(generation_id), db_type)
+    workaround(str(generation_id), db_options.db_type)
 
-    return zipfiles(os.path.join(project_root, str(generation_id)))
+    return zip_generated_code(os.path.join(project_root, generation_id))
 
 
 def workaround(generation_id: str, db_type: str):
@@ -98,6 +94,3 @@ def workaround(generation_id: str, db_type: str):
 
     with open(requirements_txt, "w") as f:
         f.write(content)
-
-
-#
