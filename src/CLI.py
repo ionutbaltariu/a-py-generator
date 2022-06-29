@@ -1,209 +1,34 @@
 import uuid
+import argparse
+import json
+import os
+from json import JSONDecodeError
 from pathlib import Path
 from GenerationOrchestrator import GenerationOrchestrator
 from view import Input
-
-metadata = {
-    "resources": [
-        {
-            "name": "Customer",
-            "table_name": "Customers",
-            "fields": [
-                {
-                    "name": "custid",
-                    "type": "integer",
-                    "nullable": False
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "length": 45,
-                    "nullable": True
-                },
-                {
-                    "name": "address",
-                    "type": "string",
-                    "length": 40,
-                    "nullable": True
-                },
-                {
-                    "name": "city",
-                    "type": "string",
-                    "length": 30,
-                    "nullable": True
-                },
-                {
-                    "name": "state",
-                    "type": "string",
-                    "length": 2,
-                    "nullable": True
-                },
-                {
-                    "name": "zip",
-                    "type": "string",
-                    "length": 9,
-                    "nullable": True
-                },
-                {
-                    "name": "area",
-                    "type": "integer",
-                    "nullable": True
-                },
-                {
-                    "name": "phone",
-                    "type": "string",
-                    "length": 9,
-                    "nullable": True
-                },
-                {
-                    "name": "repid",
-                    "type": "integer",
-                    "nullable": False
-                },
-                {
-                    "name": "creditlimit",
-                    "type": "decimal",
-                    "nullable": True
-                }
-            ],
-            "primary_key": "custid",
-            "relationships": [
-                {
-                    "type": "ONE-TO-MANY",
-                    "table": "Ord",
-                    "reference_field": "custid"
-                }
-            ],
-            "options": {
-                "api_caching_enabled": True
-            }
-        },
-        {
-            "name": "Order",
-            "table_name": "Ord",
-            "fields": [
-                {
-                    "name": "ordid",
-                    "type": "integer",
-                    "nullable": False
-                },
-                {
-                    "name": "total",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "totaltva",
-                    "type": "decimal",
-                    "nullable": True
-                }
-            ],
-            "primary_key": "ordid",
-            "relationships": [
-                {
-                    "type": "ONE-TO-MANY",
-                    "table": "Items",
-                    "reference_field": "ordid"
-                }
-            ]
-        },
-        {
-            "name": "Product",
-            "table_name": "Products",
-            "fields": [
-                {
-                    "name": "prodid",
-                    "type": "integer",
-                    "nullable": False
-                },
-                {
-                    "name": "descrip",
-                    "type": "string",
-                    "length": 30,
-                    "nullable": True
-                },
-                {
-                    "name": "vat",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "exp_date",
-                    "type": "date",
-                    "nullable": True
-                }
-            ],
-            "primary_key": "prodid",
-            "relationships": [
-                {
-                    "type": "ONE-TO-MANY",
-                    "table": "Items",
-                    "reference_field": "prodid"
-                }
-            ]
-        },
-        {
-            "name": "Item",
-            "table_name": "Items",
-            "fields": [
-                {
-                    "name": "itemid",
-                    "type": "integer",
-                    "nullable": False
-                },
-                {
-                    "name": "actualprice",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "qty",
-                    "type": "integer",
-                    "nullable": True
-                },
-                {
-                    "name": "itemtot",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "tva",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "itemgen",
-                    "type": "decimal",
-                    "nullable": True
-                },
-                {
-                    "name": "guarantee",
-                    "type": "integer",
-                    "nullable": True
-                },
-                {
-                    "name": "exp_date",
-                    "type": "date",
-                    "nullable": True
-                }
-            ],
-            "primary_key": "itemid"
-        }
-    ],
-    "options": {
-        "database_options": {
-            "db_type": "MariaDB",
-            "db_port": 27017
-        },
-        "run_main_app_in_container": False
-    }
-}
+parser = argparse.ArgumentParser(description='A-py-generator parsers.')
+parser.add_argument('--input-json', help='An absolute path that indicates the JSON '\
+                                         'wanted to be used as input for the app.',
+                    type=str, required=True)
 
 
 if __name__ == "__main__":
-    project_root = Path(__file__).parent.parent
-    generation_metadata = Input(**metadata)
-    generation_id = str(uuid.uuid4())
-    orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
-    orchestrator.generate()
+    args = parser.parse_args()
+    input_path = args.input_json
+    if not os.path.exists(input_path):
+        print("Please provide a valid path to the input!")
+    elif not os.path.splitext(input_path)[1] == ".json":
+        print("The path was valid but the file is not a json!")
+    else:
+        with open(input_path, "r") as input_file:
+            try:
+                metadata = json.loads(input_file.read())
+                project_root = Path(__file__).parent.parent
+                generation_metadata = Input(**metadata)
+                generation_id = str(uuid.uuid4())
+                print(f"Will generate the code into the folder {generation_id}.")
+                orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
+                orchestrator.generate()
+            except JSONDecodeError:
+                print("The provided path is correct but the JSON at that path is invalid.")
 

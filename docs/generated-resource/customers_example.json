@@ -1,183 +1,195 @@
-[
-    {
-        "name": "Customer",
-        "table_name": "Customers",
-        "fields": [
-            {
-                "name": "custid",
-                "type": "integer",
-                "nullable": false
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "length": 45,
-                "nullable": true
-            },
-            {
-                "name": "address",
-                "type": "string",
-                "length": 40,
-                "nullable": true
-            },
-            {
-                "name": "city",
-                "type": "string",
-                "length": 30,
-                "nullable": true
-            },
-            {
-                "name": "state",
-                "type": "string",
-                "length": 2,
-                "nullable": true
-            },
-            {
-                "name": "zip",
-                "type": "string",
-                "length": 9,
-                "nullable": true
-            },
-            {
-                "name": "area",
-                "type": "integer",
-                "nullable": true
-            },
-            {
-                "name": "phone",
-                "type": "string",
-                "length": 9,
-                "nullable": true
-            },
-            {
-                "name": "repid",
-                "type": "integer",
-                "nullable": false
-            },
-            {
-                "name": "creditlimit",
-                "type": "decimal",
-                "nullable": true
+{
+    "resources": [
+        {
+            "name": "Customer",
+            "table_name": "Customers",
+            "fields": [
+                {
+                    "name": "custid",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "length": 45,
+                    "nullable": true
+                },
+                {
+                    "name": "address",
+                    "type": "string",
+                    "length": 40,
+                    "nullable": true
+                },
+                {
+                    "name": "city",
+                    "type": "string",
+                    "length": 30,
+                    "nullable": true
+                },
+                {
+                    "name": "state",
+                    "type": "string",
+                    "length": 2,
+                    "nullable": true
+                },
+                {
+                    "name": "zip",
+                    "type": "string",
+                    "length": 9,
+                    "nullable": true
+                },
+                {
+                    "name": "area",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "phone",
+                    "type": "string",
+                    "length": 9,
+                    "nullable": true
+                },
+                {
+                    "name": "repid",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "creditlimit",
+                    "type": "decimal",
+                    "nullable": true
+                }
+            ],
+            "primary_key": "custid",
+            "relationships": [
+                {
+                    "type": "ONE-TO-MANY",
+                    "table": "Ord",
+                    "reference_field": "custid"
+                }
+            ],
+            "options": {
+                "api_caching_enabled": true
             }
-        ],
-        "primary_key": "custid",
-        "relationships": [
-            {
-                "type": "ONE-TO-MANY",
-                "table": "Ord",
-                "reference_field": "custid"
-            }
-        ]
-    },
-    {
-        "name": "Order",
-        "table_name": "Ord",
-        "fields": [
-            {
-                "name": "ordid",
-                "type": "integer",
-                "nullable": false
-            },
-            {
-                "name": "total",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "totaltva",
-                "type": "decimal",
-                "nullable": true
-            }
-        ],
-        "primary_key": "ordid",
-        "relationships": [
-            {
-                "type": "ONE-TO-MANY",
-                "table": "Items",
-                "reference_field": "ordid"
-            }
-        ]
-    },
-    {
-        "name": "Product",
-        "table_name": "Products",
-        "fields": [
-            {
-                "name": "prodid",
-                "type": "integer",
-                "nullable": false
-            },
-            {
-                "name": "descrip",
-                "type": "string",
-                "length": 30,
-                "nullable": true
-            },
-            {
-                "name": "vat",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "exp_date",
-                "type": "date",
-                "nullable": true
-            }
-        ],
-        "primary_key": "prodid",
-        "relationships": [
-            {
-                "type": "ONE-TO-MANY",
-                "table": "Items",
-                "reference_field": "prodid"
-            }
-        ]
-    },
-    {
-        "name": "Item",
-        "table_name": "Items",
-        "fields": [
-            {
-                "name": "itemid",
-                "type": "integer",
-                "nullable": false
-            },
-            {
-                "name": "actualprice",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "qty",
-                "type": "integer",
-                "nullable": true
-            },
-            {
-                "name": "itemtot",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "tva",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "itemgen",
-                "type": "decimal",
-                "nullable": true
-            },
-            {
-                "name": "guarantee",
-                "type": "integer",
-                "nullable": true
-            },
-            {
-                "name": "exp_date",
-                "type": "date",
-                "nullable": true
-            }
-        ],
-        "primary_key": "itemid"
+        },
+        {
+            "name": "Order",
+            "table_name": "Ord",
+            "fields": [
+                {
+                    "name": "ordid",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "total",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "totaltva",
+                    "type": "decimal",
+                    "nullable": true
+                }
+            ],
+            "primary_key": "ordid",
+            "relationships": [
+                {
+                    "type": "ONE-TO-MANY",
+                    "table": "Items",
+                    "reference_field": "ordid"
+                }
+            ]
+        },
+        {
+            "name": "Product",
+            "table_name": "Products",
+            "fields": [
+                {
+                    "name": "prodid",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "descrip",
+                    "type": "string",
+                    "length": 30,
+                    "nullable": true
+                },
+                {
+                    "name": "vat",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "exp_date",
+                    "type": "date",
+                    "nullable": true
+                }
+            ],
+            "primary_key": "prodid",
+            "relationships": [
+                {
+                    "type": "ONE-TO-MANY",
+                    "table": "Items",
+                    "reference_field": "prodid"
+                }
+            ]
+        },
+        {
+            "name": "Item",
+            "table_name": "Items",
+            "fields": [
+                {
+                    "name": "itemid",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "actualprice",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "qty",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "itemtot",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "tva",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "itemgen",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "guarantee",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "exp_date",
+                    "type": "date",
+                    "nullable": true
+                }
+            ],
+            "primary_key": "itemid"
+        }
+    ],
+    "options": {
+        "database_options": {
+            "db_type": "MariaDB",
+            "db_port": 27017
+        },
+        "run_main_app_in_container": false
     }
-]
+}
