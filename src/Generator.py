@@ -11,7 +11,7 @@ class Generator(abc.ABC):
         :param generation_uid: the identifier of the current generation process (used as a name for the directory
         that will contain the generated code)
         """
-        self.project_root_dir = Path(__file__).parent.parent.parent
+        self.project_root_dir = Path(__file__).parent.parent
         self.__generation_uid = generation_uid
         self.generation_path = os.path.join(self.project_root_dir, self.__generation_uid)
         self.source_code_path = os.path.join(self.generation_path, 'src')

@@ -70,6 +70,23 @@ def generate_app(generation_metadata: Input) -> Response:
         response = Response(status_code=500, media_type="application/json",
                             content=Error(error_code=500,
                                           error_source=str(e),
-                                          error_reason="EXCEPTION"))
+                                          error_reason="EXCEPTION").dict())
 
     return response
+
+
+@app.get("/api/retrieve/{generation_id}")
+def retrieve_generated_app(generation_id: str):
+    """
+    Method that can be used to retrieve the code that has already been generated.
+
+    :param generation_id: the generation id of the code that is to be retrieved (the name of the folder that was
+    downloaded first)
+    """
+    if not os.path.exists(os.path.join(project_root, generation_id)):
+        return Response(status_code=404, media_type="application/json",
+                        content=Error(error_code=404,
+                                      error_source="There is no generated project with the given id.",
+                                      error_reason="ERROR").dict())
+    else:
+        return zip_generated_code(os.path.join(project_root, generation_id))

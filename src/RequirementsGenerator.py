@@ -8,10 +8,7 @@ def execute_bash_commands(bash_commands: List[str]):
     Method that can be used to execute bash commands.
     """
     for command in bash_commands:
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        output, error = process.communicate()
-
-        # TODO: handle error
+        subprocess.call(command.split(), stdout=subprocess.PIPE)
 
 
 class RequirementsGenerator(Generator):
