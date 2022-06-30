@@ -67,10 +67,12 @@ def generate_app(generation_metadata: Input) -> Response:
         orchestrator.generate()
         response = zip_generated_code(os.path.join(project_root, generation_id))
     except Exception as e:
-        response = Response(status_code=500, media_type="application/json",
-                            content=Error(error_code=500,
-                                          error_source=str(e),
-                                          error_reason="EXCEPTION").dict())
+        error = Error(error_code=500,
+                      error_source=str(e),
+                      error_reason="EXCEPTION").dict()
+        response = Response(status_code=500,
+                            media_type="application/json",
+                            content=error)
 
     return response
 
@@ -84,9 +86,11 @@ def retrieve_generated_app(generation_id: str):
     downloaded first)
     """
     if not os.path.exists(os.path.join(project_root, generation_id)):
-        return Response(status_code=404, media_type="application/json",
-                        content=Error(error_code=404,
-                                      error_source="There is no generated project with the given id.",
-                                      error_reason="ERROR").dict())
+        error = Error(error_code=404,
+                      error_source="There is no generated project with the given id.",
+                      error_reason="ERROR").dict()
+        return Response(status_code=404,
+                        media_type="application/json",
+                        content=error)
     else:
         return zip_generated_code(os.path.join(project_root, generation_id))
