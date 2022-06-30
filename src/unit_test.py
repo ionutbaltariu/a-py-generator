@@ -1,6 +1,6 @@
 import unittest
 from mock_data import valid_resources
-from view import Input
+from srctrueview import Input
 from config import MAX_STR_LENGTH, PASSWORD_LENGTH, PROJECT_DESCRIPTION_MAX_LENGTH, PROJECT_VERSION_MAX_LENGTH, \
     MAX_RESOURCES_ALLOWED
 

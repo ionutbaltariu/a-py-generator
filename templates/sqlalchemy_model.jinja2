@@ -23,6 +23,10 @@ from sqlalchemy import orm
                 {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }}, back_populates={{ resource.name | lower | tojson  }})
             {%- elif relation.type == "ONE-TO-MANY" -%}
                 {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }})
+            {%- elif relation.type == "MANY-TO-MANY" -%}
+                {{- relation.table | lower }} = orm.relationship({{ relation.resource | tojson }})
+{#                user = db.relationship("User", back_populates="user_devices")#}
+{#                role = db.relationship("Role", back_populates="user_devices")#}
             {%- else -%}
             {% endif %}
         {% endif %}

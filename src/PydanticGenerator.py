@@ -26,11 +26,18 @@ class PydanticResource:
 
 
 class PydanticGenerator(ResourceBasedGenerator):
-    def __init__(self, resources: List[dict], generation_path):
-        super().__init__(resources, generation_path)
+    def __init__(self, resources: List[dict], generation_uid: str):
+        """
+        :param resources: the list of resources defined by the user
+        :param generation_uid: the identifier of the generation, used to group the source code in a directory
+        """
+        super().__init__(resources, generation_uid)
         self.pydantic_template = self.read_template_from_file('pydantic.jinja2')
 
     def generate(self) -> None:
+        """
+        Creates the view.py file that contains all of the Pydantic models of the generated application.
+        """
         resources = []
         for resource in self.resources:
             fields = []

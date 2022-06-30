@@ -11,6 +11,11 @@ datatype_converter = {
 
 class FastAPIGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid, options: Options):
+        """
+        :param resources: the list of resources defined by the user
+        :param generation_uid: the identifier of the generation, used to group the source code in a directory
+        :param options: the document containing the settings of the generated application (as a Pydantic model)
+        """
         super().__init__(resources, generation_uid)
         self.type = options.database_options.db_type
         self.application_port = options.application_port
@@ -33,10 +38,16 @@ class FastAPIGenerator(ResourceBasedGenerator):
             resource["pk_type"] = datatype_converter[pk_type]
 
     def create_utils_file(self):
+        """
+        Creates the utils.py file that contains useful information and methods.
+        """
         utils_code = self.utils_template.render(resources=self.resources)
         self.write_to_src('utils.py', utils_code)
 
     def create_routers(self):
+        """
+        Creates FastAPI routers for each existing resource and based on the selected database type.
+        """
         if self.type == "MariaDB":
             router_template = self.router_template_mariadb
         else:
@@ -48,18 +59,18 @@ class FastAPIGenerator(ResourceBasedGenerator):
             self.write_to_src(f'{resource["name"].lower()}_router.py', router_code)
 
     def create_main_app(self):
+        """
+        Creates the main FastAPI entrypoint file (api.py) and a script to run it outside Docker containers (main.py).
+        """
         entrypoint_code = self.entrypoint_template.render(resources=self.resources,
                                                           caching_enabled=self.at_least_one_cached_resource,
                                                           project_metadata=self.project_metadata)
         self.write_to_src('api.py', entrypoint_code)
-
-        # TODO: separate in different functions and add configuration of port, host etc
 
         main_code = self.main_app_template.render(application_port=self.application_port)
         self.write_to_src('main.py', main_code)
 
     def generate(self):
         self.create_utils_file()
-        # TODO: add errors for each entity (replace in jinja template as well)
         self.create_routers()
         self.create_main_app()

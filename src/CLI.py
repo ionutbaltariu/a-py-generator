@@ -2,14 +2,17 @@ import uuid
 import argparse
 import json
 import os
+import traceback
 from json import JSONDecodeError
 from pathlib import Path
 from GenerationOrchestrator import GenerationOrchestrator
 from view import Input
+
 parser = argparse.ArgumentParser(description='A-py-generator parsers.')
-parser.add_argument('--input-json', help='An absolute path that indicates the JSON '\
-                                         'wanted to be used as input for the app.',
-                    type=str, required=True)
+parser.add_argument('--input-json',
+                    help='An absolute path that indicates the JSON wanted to be used as input for the app.',
+                    type=str,
+                    required=True)
 
 
 if __name__ == "__main__":
@@ -29,6 +32,10 @@ if __name__ == "__main__":
                 print(f"Will generate the code into the folder {generation_id}.")
                 orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
                 orchestrator.generate()
+                print(f"Finished generating code with the ID {generation_id}.")
             except JSONDecodeError:
                 print("The provided path is correct but the JSON at that path is invalid.")
+            except Exception:
+                print(traceback.format_exc())
+                print("An unknown error has occurred. Please log an issue.")
 

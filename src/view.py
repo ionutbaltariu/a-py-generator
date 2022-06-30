@@ -6,21 +6,46 @@ from config import MAX_RESOURCES_ALLOWED, MAX_STR_LENGTH, PASSWORD_LENGTH, PROJE
 
 
 def generic_alphanumeric_validator(element: str, element_name: str) -> None:
+    """
+    Raises an exception if the given field value is not alphanumeric (it can contain '_')
+
+    :param element: the value of the field that is to be checked
+    :param element_name: the name of the checked field
+    """
     if not element.replace('_', '').isalnum():
         raise ValueError(f"A(n) {element_name} can only contain alphabetic characters and '_'.")
 
 
 def generic_keyword_verifier(element: str, element_name: str) -> None:
+    """
+    Raises an exception if the given field is a Python keyword.
+
+    :param element: the value of the field that is to be checked
+    :param element_name: the name of the checked field
+    """
     if iskeyword(element):
         raise ValueError(f"A(n) {element_name}  cannot be equivalent to a Python keyword.")
 
 
 def string_must_not_start_with_number_verifier(element: str, element_name: str) -> None:
+    """
+    Raises an exception if the given field value begins with a number.
+
+    :param element: the value of the field that is to be checked
+    :param element_name: the name of the checked field
+    """
     if element[:1].isdigit():
         raise ValueError(f"A(n) {element_name}'s name cannot begin with a number.")
 
 
 def generic_alphanumeric_and_keyword_validator(element: str, element_name: str) -> None:
+    """
+    Checks for he validity of a given field value. It must not be a Python keyword, must be alphanumeric with optional
+    underscores and must not begin with a number.
+
+    :param element: the value of the field that is to be checked
+    :param element_name: the name of the checked field
+    """
     generic_keyword_verifier(element, element_name)
     generic_alphanumeric_validator(element, element_name)
     string_must_not_start_with_number_verifier(element, element_name)
@@ -59,7 +84,7 @@ class Relationship(BaseModel, extra=Extra.forbid):
     type: Literal["ONE-TO-ONE", "ONE-TO-MANY", "MANY-TO-MANY"]
     table: constr(min_length=1, max_length=MAX_STR_LENGTH)
     reference_field: Optional[constr(min_length=1, max_length=MAX_STR_LENGTH)]
-    role: Optional[Literal["Child", "Parent"]]
+    role: Optional[Literal["Child", "Parent", "JoinTable"]]
 
 
 class ForeignKey(BaseModel, extra=Extra.forbid):

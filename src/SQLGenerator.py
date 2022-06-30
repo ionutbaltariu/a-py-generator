@@ -66,13 +66,17 @@ class Table:
 
 class SQLGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid):
+        """
+        :param resources: the list of resources defined by the user
+        :param generation_uid: the identifier of the generation, used to group the source code in a directory
+        """
         super().__init__(resources, generation_uid)
         self.sql_template = self.read_template_from_file('sql.jinja2')
 
     def generate(self) -> None:
         """
         Method that generates SQL code based on a given List of resources.
-       """
+        """
         tables_to_be_created = []
 
         for resource in self.resources:

@@ -131,9 +131,8 @@
             "primary_key": "prodid",
             "relationships": [
                 {
-                    "type": "ONE-TO-MANY",
-                    "table": "Items",
-                    "reference_field": "prodid"
+                    "type": "MANY-TO-MANY",
+                    "table": "Items"
                 }
             ]
         },

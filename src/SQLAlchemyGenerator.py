@@ -80,6 +80,11 @@ def get_attributes_from_field(field: dict, is_primary_key: bool):
 
 class SQLAlchemyGenerator(ResourceBasedGenerator):
     def __init__(self, resources: List[dict], generation_uid, options: Options):
+        """
+        :param resources: the list of resources defined by the user
+        :param generation_uid: the identifier of the generation, used to group the source code in a directory
+        :param options: the document containing the settings of the generated application (as a Pydantic model)
+        """
         super().__init__(resources, generation_uid)
         host = 'database' if options.run_main_app_in_container else 'localhost'
         self.db_connection_config = ConnectionConfig(db_user=options.database_options.db_username,
@@ -98,7 +103,9 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
         self.write_to_src('db.py', db_conn_code)
 
     def generate_sqlalchemy_classes(self) -> None:
-        # TODO: Refactor down to small, understandable pieces
+        """
+        Generates a file for each SQLAlchemy model.
+        """
         for resource in self.resources:
             fields = []
 
@@ -108,7 +115,6 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
                 if resource["foreign_keys"] is not None:
                     for foreign_key in resource["foreign_keys"]:
                         if field["name"] == foreign_key["field"]:
-                            # nasty workaround
                             # insert ForeignKey attribute at position 1
                             field_attributes.insert(1, f'sqlalchemy.ForeignKey("{foreign_key["references"]}.'
                                                        f'{foreign_key["reference_field"]}")')
@@ -118,8 +124,6 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
 
             uniques = resource["uniques"] if "uniques" in resource else None
 
-            # getting the name of the referenced resource by the table
-            # can be refactored by handling relationships with referenced to other resources instead of tables
             relationships = resource.get("relationships")
 
             if relationships:
@@ -143,6 +147,9 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
         self.write_to_src('model.py', model_code)
 
     def generate(self):
+        """
+        Executes all of the steps necessary to generate the model code that can be used to communicate with MariaDB.
+        """
         self.generate_connection_from_template()
         self.generate_sqlalchemy_classes()
         self.generate_model_code()

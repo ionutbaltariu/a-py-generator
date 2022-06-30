@@ -1,4 +1,4 @@
-from utils import workaround
+from utils import correct_pipreqs_output
 from view import Input
 from PydanticGenerator import PydanticGenerator
 from RelationshipHandler import RelationshipHandler
@@ -14,11 +14,23 @@ from DockerfileGenerator import DockerfileGenerator
 
 class GenerationOrchestrator:
     def __init__(self, generation_metadata: Input, generation_id: str, project_root: str):
+        """
+        :param generation_metadata: the input of the user
+        :param generation_id: the identifier of the generation, used to group the source code in a directory
+        :param project_root: the path of the project - this is the place where the folders that contain the
+        generated code will be available
+        """
         self.generation_metadata = generation_metadata
         self.generation_id = generation_id
         self.project_root = project_root
 
     def generate(self):
+        """
+        Orchestrator method that parses and validates the relationships as a first step. In case of success, proceeds
+        with the construction of the generator list that is to be used in the current generation process. As a final
+        step, it calls the 'generate' method of every chosen generator, thus triggering the creation of generated
+        source code files on the disk.
+        """
         r = RelationshipHandler(self.generation_metadata.resources)
         r.execute()
         resources = [resource.dict() for resource in r.resources]
@@ -41,9 +53,9 @@ class GenerationOrchestrator:
         if options.run_main_app_in_container:
             generators.append(DockerfileGenerator(resources, self.generation_id, options))
 
-        generators.append(DockerComposeGenerator(self.generation_id, resources, options))
+        generators.append(DockerComposeGenerator(resources, self.generation_id, options))
 
         for generator in generators:
             generator.generate()
 
-        workaround(self.project_root, self.generation_id, db_options.db_type)
+        correct_pipreqs_output(self.project_root, self.generation_id, db_options.db_type)

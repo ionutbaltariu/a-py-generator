@@ -1,7 +1,10 @@
 import os
 
 
-def workaround(project_root: str, generation_id: str, db_type: str):
+def correct_pipreqs_output(project_root: str, generation_id: str, db_type: str):
+    """
+    Workaround method that is used to add missing requirements and to correct wrongly generated ones.
+    """
     requirements_txt = os.path.join(project_root, generation_id, "src", "requirements.txt")
     with open(requirements_txt, "r") as f:
         content = f.read()
