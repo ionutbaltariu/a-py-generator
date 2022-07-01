@@ -3,7 +3,7 @@ from typing import List
 from Generator import Generator
 
 
-def execute_bash_commands(bash_commands: List[str]):
+def execute_system_commands(bash_commands: List[str]):
     """
     Method that can be used to execute bash commands.
     """
@@ -22,4 +22,4 @@ class RequirementsGenerator(Generator):
         """
         Executes a system command that installs pipreqs and then uses it in order to generate the requirements.
         """
-        execute_bash_commands(["python3 -m pip install pipreqs", f"pipreqs {self.source_code_path}"])
+        execute_system_commands(["python3 -m pip install pipreqs", f"pipreqs {self.source_code_path}"])
