@@ -186,27 +186,6 @@ class UnitTest(unittest.TestCase):
 
         self.assertIsInstance(Input(**data), Input)
 
-    def test_db_port_validation(self):
-        data = get_input_object()
-        options = {
-            "database_options": {
-                "db_port": -1
-            }
-        }
-        data["options"] = options
-
-        with self.assertRaises(ValueError):
-            Input(**data)
-
-        data["options"]["database_options"]["db_port"] = 65536
-
-        with self.assertRaises(ValueError):
-            Input(**data)
-
-        data["options"]["database_options"]["db_port"] = 65535
-
-        self.assertIsInstance(Input(**data), Input)
-
     def test_project_title_validation(self):
         invalid_title, valid_title = get_valid_and_invalid_str_input(MAX_STR_LENGTH)
         data = get_input_object()

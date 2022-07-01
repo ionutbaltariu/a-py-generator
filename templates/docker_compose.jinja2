@@ -4,7 +4,7 @@ services:
   {% if options["db_type"] == "MariaDB" %}
   mariadb:
     image: mariadb
-    container_name: '{{ db_host }}'
+    container_name: 'database'
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: {{ options["db_password"]  }}
@@ -15,7 +15,7 @@ services:
         aliases:
             - database
     ports:
-      - {{ options["db_port"] }}:3306
+      - 3306:3306
   {% elif options["db_type"] == "MongoDB" %}
   mongo:
     image: mongo
@@ -30,11 +30,12 @@ services:
         aliases:
             - database
     ports:
-      - {{ options["db_port"] }}:27017
+      - 27017:27017
   {% endif %}
   {% if redis_needed %}
   redis:
     image: 'bitnami/redis:latest'
+    container_name: 'redis'
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes

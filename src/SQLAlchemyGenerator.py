@@ -86,11 +86,10 @@ class SQLAlchemyGenerator(ResourceBasedGenerator):
         :param options: the document containing the settings of the generated application (as a Pydantic model)
         """
         super().__init__(resources, generation_uid)
-        host = 'database' if options.run_main_app_in_container else 'localhost'
+        host = 'database' if options.run_main_app_in_container is True else 'localhost'
         self.db_connection_config = ConnectionConfig(db_user=options.database_options.db_username,
                                                      db_user_pass=options.database_options.db_password,
-                                                     db_host= host,
-                                                     db_port=options.database_options.db_port)
+                                                     db_host=host)
         self.db_conn_template = self.read_template_from_file('db_conn.jinja2')
         self.sqlalchemy_template = self.read_template_from_file('sqlalchemy_model.jinja2')
         self.model_template = self.read_template_from_file('model_sql.jinja2')

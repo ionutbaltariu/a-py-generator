@@ -9,6 +9,12 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 {% endif %}
 
+{% if main_app_in_container %}
+    {% set redis_host = "redis" %}
+{% else %}
+    {% set redis_host = "localhost" %}
+{% endif %}
+
 app = FastAPI(
     title="{{ project_metadata["title"] }}",
     description="{{ project_metadata["description"] }}",
@@ -29,12 +35,11 @@ app = FastAPI(
 app.include_router({{ resource.name|lower }}_router.router)
 {%  endfor %}
 
-HyperModel.init_app(app)
-
-
 {% if caching_enabled -%}
 @app.on_event("startup")
 async def startup():
-    redis = aioredis.from_url("redis://redis", encoding="utf8", decode_responses=True)
+    redis = aioredis.from_url("redis://{{ redis_host }}", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 {% endif %}
+
+HyperModel.init_app(app)

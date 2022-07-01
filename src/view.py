@@ -97,15 +97,6 @@ class DatabaseOptions(BaseModel, extra=Extra.forbid):
     db_type: Literal["MariaDB", "MongoDB"] = Field(default="MariaDB")
     db_username: Optional[constr(min_length=1, max_length=MAX_STR_LENGTH)] = Field(default="root")
     db_password: Optional[constr(min_length=1, max_length=PASSWORD_LENGTH)] = Field(default="generated_password")
-    db_port: Optional[int] = Field(default=3306)
-
-    @validator("db_port")
-    def validate_port(cls, port):
-        if port > 65535:
-            raise ValueError(f"A port can have a maximum value of 65535!")
-        elif port < 0:
-            raise ValueError(f"Please provide a positive number for the port.")
-        return port
 
 
 class ProjectMetadata(BaseModel, extra=Extra.forbid):
