@@ -13,16 +13,20 @@ from DockerfileGenerator import DockerfileGenerator
 
 
 class GenerationOrchestrator:
-    def __init__(self, generation_metadata: Input, generation_id: str, project_root: str):
+    def __init__(self, generation_metadata: Input,
+                 generation_id: str, project_root: str,
+                 python_interpreter: str = "python3"):
         """
         :param generation_metadata: the input of the user
         :param generation_id: the identifier of the generation, used to group the source code in a directory
         :param project_root: the path of the project - this is the place where the folders that contain the
         generated code will be available
+        :param python_interpreter: the python interpreter that will be used (python / python3)
         """
         self.generation_metadata = generation_metadata
         self.generation_id = generation_id
         self.project_root = project_root
+        self.python_interpreter = python_interpreter
 
     def generate(self):
         """
@@ -48,7 +52,7 @@ class GenerationOrchestrator:
 
         generators.append(FastAPIGenerator(resources, self.generation_id, options))
         generators.append(PydanticGenerator(resources, self.generation_id))
-        generators.append(RequirementsGenerator(self.generation_id))
+        generators.append(RequirementsGenerator(self.generation_id, self.python_interpreter))
 
         if options.run_main_app_in_container:
             generators.append(DockerfileGenerator(resources, self.generation_id, options))

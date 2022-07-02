@@ -13,11 +13,19 @@ parser.add_argument('--input-json',
                     help='An absolute path that indicates the JSON wanted to be used as input for the app.',
                     type=str,
                     required=True)
+parser.add_argument('--python-interpreter',
+                    help='[Optional] The python interpreter to be used when trying to install pipreqs. Defaults'
+                         'to "python3"',
+                    type=str,
+                    required=False,
+                    choices=["python", "python3"])
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     input_path = args.input_json
+    interpreter = "python3" if (i := args.python_interpreter) is None else i
+
     if not os.path.exists(input_path):
         print("Please provide a valid path to the input!")
     elif not os.path.splitext(input_path)[1] == ".json":
@@ -30,7 +38,7 @@ if __name__ == "__main__":
                 generation_metadata = Input(**metadata)
                 generation_id = str(uuid.uuid4())
                 print(f"Will generate the code into the folder {generation_id}.")
-                orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
+                orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root, interpreter)
                 orchestrator.generate()
                 print(f"Finished generating code with the ID {generation_id}.")
             except JSONDecodeError:
