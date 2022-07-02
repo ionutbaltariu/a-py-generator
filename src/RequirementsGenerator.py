@@ -26,6 +26,5 @@ class RequirementsGenerator(Generator):
         """
         Executes a system command that installs pipreqs and then uses it in order to generate the requirements.
         """
-        print(f"{self.python_interpreter} -m pip install pipreqs")
         execute_system_commands([f"{self.python_interpreter} -m pip install pipreqs",
                                  f"pipreqs {self.source_code_path}"])
