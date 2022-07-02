@@ -2,7 +2,7 @@ import io
 import os
 import uuid
 import zipfile
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, status
 from pydantic import BaseModel
 from GenerationOrchestrator import GenerationOrchestrator
 from view import Input
@@ -54,43 +54,41 @@ def zip_generated_code(path: str) -> Response:
 
 
 @app.post("/api/generate/")
-def generate_app(generation_metadata: Input) -> Response:
+def generate_app(generation_metadata: Input, response: Response):
     """
     Method that is triggered at the HTTP POST on the /api/generate route.
 
     :param generation_metadata: the Pydantic model that represents the input (formal description of resources)
+    :param response: the response that will be sent - FastAPI specific
     """
     generation_id = str(uuid.uuid4())
     orchestrator = GenerationOrchestrator(generation_metadata, generation_id, project_root)
 
     try:
         orchestrator.generate()
-        response = zip_generated_code(os.path.join(project_root, generation_id))
+        return zip_generated_code(os.path.join(project_root, generation_id))
     except Exception as e:
         error = Error(error_code=500,
                       error_source=str(e),
                       error_reason="EXCEPTION").dict()
-        response = Response(status_code=500,
-                            media_type="application/json",
-                            content=error)
-
-    return response
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return error
 
 
 @app.get("/api/retrieve/{generation_id}")
-def retrieve_generated_app(generation_id: str):
+def retrieve_generated_app(generation_id: str, response: Response):
     """
     Method that can be used to retrieve the code that has already been generated.
 
     :param generation_id: the generation id of the code that is to be retrieved (the name of the folder that was
     downloaded first)
+    :param response: the response that will be sent - FastAPI specific
     """
     if not os.path.exists(os.path.join(project_root, generation_id)):
         error = Error(error_code=404,
                       error_source="There is no generated project with the given id.",
                       error_reason="ERROR").dict()
-        return Response(status_code=404,
-                        media_type="application/json",
-                        content=error)
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return error
     else:
         return zip_generated_code(os.path.join(project_root, generation_id))
