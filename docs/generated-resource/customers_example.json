@@ -132,7 +132,8 @@
             "relationships": [
                 {
                     "type": "ONE-TO-MANY",
-                    "table": "Items"
+                    "table": "Items",
+					"reference_field": "prodid"
                 }
             ]
         },

@@ -1,14 +1,16 @@
 import subprocess
 from typing import List
 from Generator import Generator
+from sys import platform
 
 
 def execute_system_commands(bash_commands: List[str]):
     """
     Method that can be used to execute bash commands.
     """
+    will_use_shell = "win" in platform
     for command in bash_commands:
-        subprocess.call(command.split(), stdout=subprocess.PIPE, shell=True)
+        subprocess.call(command.split(), stdout=subprocess.PIPE, shell=will_use_shell)
 
 
 class RequirementsGenerator(Generator):
@@ -24,5 +26,6 @@ class RequirementsGenerator(Generator):
         """
         Executes a system command that installs pipreqs and then uses it in order to generate the requirements.
         """
+        print(f"{self.python_interpreter} -m pip install pipreqs")
         execute_system_commands([f"{self.python_interpreter} -m pip install pipreqs",
                                  f"pipreqs {self.source_code_path}"])
