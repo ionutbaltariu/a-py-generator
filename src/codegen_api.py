@@ -37,7 +37,7 @@ def zip_generated_code(path: str) -> Response:
     :param path: the path of the directory that is to be zipped
     """
     s = io.BytesIO()
-    with zipfile.ZipFile(s, 'w') as zip_file:
+    with zipfile.ZipFile(s, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
         for root, dirs, files in os.walk(path):
             for file in files:
                 zip_file.write(os.path.join(root, file),
