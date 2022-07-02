@@ -131,7 +131,7 @@
             "primary_key": "prodid",
             "relationships": [
                 {
-                    "type": "MANY-TO-MANY",
+                    "type": "ONE-TO-MANY",
                     "table": "Items"
                 }
             ]
@@ -186,8 +186,7 @@
     ],
     "options": {
         "database_options": {
-            "db_type": "MariaDB",
-            "db_port": 27017
+            "db_type": "MariaDB"
         },
         "run_main_app_in_container": false
     }
