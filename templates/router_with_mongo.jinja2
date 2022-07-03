@@ -19,7 +19,7 @@ router = APIRouter()
                        500: {"model": Error}},
             tags=[{{ entity.table_name|lower|tojson }}])
 {% if caching_enabled -%}
-@cache(expire=60)
+@cache(expire={{ cache_for }})
 {% endif %}
 {% if caching_enabled -%}async {% endif %}def get_{{ entity.table_name|lower }}(request: Request, response: Response, page: int = 1, items_per_page: int = 15):
     """
@@ -46,7 +46,7 @@ router = APIRouter()
                        500: {"model": Error}},
             tags=[{{ entity.table_name|lower|tojson }}])
 {% if caching_enabled -%}
-@cache(expire=60)
+@cache(expire={{ cache_for }})
 {% endif %}
 {% if caching_enabled -%}async {% endif %}def get_{{ entity.name|lower }}({{ entity.primary_key }}: {{ entity.pk_type }}, request: Request, response: Response):
     """

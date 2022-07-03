@@ -24,12 +24,13 @@ parser.add_argument('--python-interpreter',
 if __name__ == "__main__":
     args = parser.parse_args()
     input_path = args.input_json
+    script_name = __file__.split("/")[-1]
     interpreter = "python3" if (i := args.python_interpreter) is None else i
 
     if not os.path.exists(input_path):
-        print("Please provide a valid path to the input!")
+        print(f"{script_name}: error: Please provide a valid path to the input!")
     elif not os.path.splitext(input_path)[1] == ".json":
-        print("The path was valid but the file is not a json!")
+        print(f"{script_name}: error: The path was valid but the file is not a json!")
     else:
         with open(input_path, "r") as input_file:
             try:
@@ -42,8 +43,10 @@ if __name__ == "__main__":
                 orchestrator.generate()
                 print(f"Finished generating code with the ID {generation_id}.")
             except JSONDecodeError:
-                print("The provided path is correct but the JSON at that path is invalid.")
+                print(f"{script_name}: error: The provided path is correct but the JSON document is invalid.")
+            except ValueError:
+                print(traceback.format_exc())
             except Exception:
                 print(traceback.format_exc())
-                print("An unknown error has occurred. Please log an issue.")
+                print(f"{script_name}: error: An unkown error has occured!")
 

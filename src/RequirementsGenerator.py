@@ -8,7 +8,7 @@ def execute_system_commands(bash_commands: List[str]):
     """
     Method that can be used to execute bash commands.
     """
-    will_use_shell = "win" in platform
+    will_use_shell = "win32" in platform
     for command in bash_commands:
         subprocess.call(command.split(), stdout=subprocess.PIPE, shell=will_use_shell)
 

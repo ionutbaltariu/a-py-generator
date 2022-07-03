@@ -189,6 +189,6 @@
         "database_options": {
             "db_type": "MariaDB"
         },
-        "run_main_app_in_container": false
+        "run_main_app_in_container": true
     }
 }

@@ -2,7 +2,7 @@ from pydantic import BaseModel, constr, validator, Extra, Field
 from typing import List, Optional, Literal
 from keyword import iskeyword
 from config import MAX_RESOURCES_ALLOWED, MAX_STR_LENGTH, PASSWORD_LENGTH, PROJECT_DESCRIPTION_MAX_LENGTH, \
-    PROJECT_VERSION_MAX_LENGTH
+    PROJECT_VERSION_MAX_LENGTH, MAX_WEBSITE_LENGTH
 
 
 def generic_alphanumeric_validator(element: str, element_name: str) -> None:
@@ -105,8 +105,7 @@ class ProjectMetadata(BaseModel, extra=Extra.forbid):
                         max_length=PROJECT_DESCRIPTION_MAX_LENGTH) = Field(default="Generated with a-py-generator")
     version: constr(min_length=1, max_length=PROJECT_VERSION_MAX_LENGTH) = Field(default="0.0.1")
     creator_name: constr(min_length=1, max_length=MAX_STR_LENGTH) = Field(default="")
-    creator_website: constr(min_length=1, max_length=MAX_STR_LENGTH) = Field(default="")
-    # TODO: de completat cu alte metadate pentru proiectul FastAPI
+    creator_website: constr(min_length=1, max_length=MAX_WEBSITE_LENGTH) = Field(default="")
 
 
 class Options(BaseModel, extra=Extra.forbid):
@@ -126,10 +125,14 @@ class Options(BaseModel, extra=Extra.forbid):
 
 class ResourceOptions(BaseModel, extra=Extra.forbid):
     api_caching_enabled: Optional[bool] = Field(default=False)
-    prevent_create_generation: Optional[bool] = Field(default=False)
-    prevent_retrieve_generation: Optional[bool] = Field(default=False)
-    prevent_update_generation: Optional[bool] = Field(default=False)
-    prevent_delete_generation: Optional[bool] = Field(default=False)
+    cache_for: Optional[int] = Field(default=60)
+
+    @validator("cache_for")
+    def validate_caching_time(cls, cache_for):
+        if cache_for < 1 or cache_for > int(3.1536e+7):
+            raise ValueError("A resource can be cached for a maximum of a year"
+                             " and for a minimum of one second.")
+        return cache_for
 
 
 class Resource(BaseModel, extra=Extra.forbid):
@@ -148,7 +151,6 @@ class Resource(BaseModel, extra=Extra.forbid):
 
         if len(set(field_names)) != len(field_names):
             raise ValueError(f"Please make sure that there are no duplicate field names in the input!")
-
         return v
 
     @validator('name')
@@ -176,7 +178,6 @@ class Resource(BaseModel, extra=Extra.forbid):
     def uniques_names_must_be_alphanumeric(cls, v):
         for unique in v:
             generic_alphanumeric_and_keyword_validator(unique.name, 'unique name')
-
         return v
 
     @validator('uniques')
@@ -200,7 +201,6 @@ class Resource(BaseModel, extra=Extra.forbid):
 
         if len(set(unique_names)) != len(unique_names):
             raise ValueError(f"Please make sure that there are no duplicate unique names in the input!")
-
         return v
 
     @validator('uniques')
@@ -212,7 +212,6 @@ class Resource(BaseModel, extra=Extra.forbid):
                 if i != j and [x.lower() for x in list_of_unique_pairs[i]] == [x.lower() for x in
                                                                                list_of_unique_pairs[j]]:
                     raise ValueError(f"Please make sure that there are no duplicate unique pairs in the input.")
-
         return v
 
 
@@ -224,14 +223,12 @@ class Input(BaseModel, extra=Extra.forbid):
     def resource_list_cannot_be_empty(cls, v):
         if (len(v)) == 0:
             raise ValueError("Input resource list cannot be empty!")
-
         return v
 
     @validator('resources')
     def resource_list_cannot_be_huge(cls, v):
         if len(v) > MAX_RESOURCES_ALLOWED:
             raise ValueError(f"Input resource list cannot contain more than {MAX_RESOURCES_ALLOWED} elements.")
-
         return v
 
     @validator('resources')
@@ -240,7 +237,6 @@ class Input(BaseModel, extra=Extra.forbid):
 
         if len(set(resource_names)) != len(resource_names):
             raise ValueError(f"Please make sure that there are no duplicate resource names in the input.")
-
         return v
 
     @validator('resources')
@@ -249,7 +245,6 @@ class Input(BaseModel, extra=Extra.forbid):
 
         if len(set(table_names)) != len(table_names):
             raise ValueError(f"Please make sure that there are no duplicate table names in the input.")
-
         return v
 
     @validator('resources')
@@ -277,5 +272,4 @@ class Input(BaseModel, extra=Extra.forbid):
                 if relation.reference_field not in [x.name for x in
                                                     resource.fields] and relation.type != "MANY-TO-MANY":
                     raise ValueError(f"The referenced field should exist in '{resource.table_name}'!")
-
         return v

@@ -56,7 +56,8 @@ class FastAPIGenerator(ResourceBasedGenerator):
 
         for resource in self.resources:
             caching_enabled = resource.get("options").get("api_caching_enabled")
-            router_code = router_template.render(entity=resource, caching_enabled=caching_enabled)
+            cache_for = resource.get("options").get("cache_for")
+            router_code = router_template.render(entity=resource, caching_enabled=caching_enabled, cache_for=cache_for)
             self.write_to_src(f'{resource["name"].lower()}_router.py', router_code)
 
     def create_main_app(self):
