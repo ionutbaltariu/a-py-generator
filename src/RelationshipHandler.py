@@ -36,7 +36,7 @@ class RelationshipHandler:
 
             for relation in resource.relationships:
                 child = list(filter(lambda x: x.table_name == relation.table, self.resources))[0]
-                fk_name = f"{resource.name}_fk" if relation.type != "MANY-TO-MANY" else None
+                fk_name = f"{resource.name}_fk".lower() if relation.type != "MANY-TO-MANY" else None
                 reference_field = [x for x in resource.fields if x.name == relation.reference_field][0] \
                     if relation.type != "MANY-TO-MANY" else None
 
@@ -91,7 +91,7 @@ class RelationshipHandler:
         fields = [ResourceField(name=f"id", type="integer", nullable=False),
                   ResourceField(name=f"{parent_table.primary_key}", nullable=False, **params),
                   ResourceField(name=f"{child_table.primary_key}", nullable=False, **params2)]
-        table_name = f"{parent_table.table_name}_{child_table.table_name}"
+        table_name = f"{parent_table.table_name}_{child_table.table_name}".lower()
 
         relationships = [Relationship(type="MANY-TO-MANY",
                                       table=parent_table.table_name,

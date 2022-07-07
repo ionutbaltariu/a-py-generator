@@ -3,19 +3,19 @@ USE generated_db;
 
 {% for table in tables %}
 CREATE TABLE `{{ table.name }}` (
-{% for field in table.fields -%}
-    `{{ field.name }}` {{ field.type }} {{ field.nullability }},
+{% for field in table.fields %}
+    `{{ field.name }}` {{ field.type }}{% if field.nullability -%}{{ field.nullability }}{% endif %},
 {% endfor %}
-{% for unique in table.uniques -%}
+{% for unique in table.uniques %}
     UNIQUE KEY `{{ unique.name }}` ({% for un_field in unique.unique_fields -%}`{{ un_field }}`{{ ", " if not loop.last else "" }}{% endfor %}),
 {% endfor %}
-PRIMARY KEY (`{{ table.primary_key }}`)
+    PRIMARY KEY (`{{ table.primary_key }}`)
 );
 
 {% endfor %}
 
-{% for table in tables %}
-{% for foreign_key in table.foreign_keys %}
-ALTER TABLE `{{ table.name }}` ADD CONSTRAINT FOREIGN KEY (`{{ foreign_key.field }}`) REFERENCES `{{ foreign_key.references }}` (`{{ foreign_key.reference_field }}`);
-{% endfor %}
+{% for table in tables -%}
+    {% for foreign_key in table.foreign_keys -%}
+        ALTER TABLE `{{ table.name }}` ADD CONSTRAINT FOREIGN KEY (`{{ foreign_key.field }}`) REFERENCES `{{ foreign_key.references }}` (`{{ foreign_key.reference_field }}`);
+    {% endfor %}
 {% endfor %}
