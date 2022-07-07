@@ -9,17 +9,6 @@
                     "type": "string",
                     "length": 100,
                     "nullable": false
-                },
-                {
-                    "name": "title",
-                    "type": "string",
-                    "length": 100,
-                    "nullable": false
-                },
-                {
-                    "name": "year_of_publishing",
-                    "type": "integer",
-                    "nullable": false
                 }
             ],
             "primary_key": "isbn",
@@ -37,7 +26,11 @@
                         "year_of_publishing"
                     ]
                 }
-            ]
+            ],
+            "options": {
+                "api_caching_enabled": true,
+                "cache_for": 60
+            }
         },
         {
             "name": "Author",

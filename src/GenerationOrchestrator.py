@@ -44,20 +44,20 @@ class GenerationOrchestrator:
 
         generators.append(StructureGenerator(self.generation_id))
 
+        if options.run_main_app_in_container:
+            generators.append(DockerfileGenerator(resources, self.generation_id, options))
+
+        generators.append(DockerComposeGenerator(resources, self.generation_id, options))
+
         if db_options.db_type == "MariaDB":
             generators.append(SQLAlchemyGenerator(resources, self.generation_id, options))
             generators.append(SQLGenerator(resources, self.generation_id))
         else:
             generators.append(MongoGenerator(resources, self.generation_id, options))
 
-        generators.append(FastAPIGenerator(resources, self.generation_id, options))
         generators.append(PydanticGenerator(resources, self.generation_id))
+        generators.append(FastAPIGenerator(resources, self.generation_id, options))
         generators.append(RequirementsGenerator(self.generation_id, self.python_interpreter))
-
-        if options.run_main_app_in_container:
-            generators.append(DockerfileGenerator(resources, self.generation_id, options))
-
-        generators.append(DockerComposeGenerator(resources, self.generation_id, options))
 
         for generator in generators:
             generator.generate()

@@ -70,7 +70,8 @@
                 }
             ],
             "options": {
-                "api_caching_enabled": true
+                "api_caching_enabled": true,
+                "cache_for": 60
             }
         },
         {
@@ -185,10 +186,17 @@
             "primary_key": "itemid"
         }
     ],
-    "options": {
-        "database_options": {
-            "db_type": "MariaDB"
-        },
-        "run_main_app_in_container": true
-    }
+        "options": {
+            "database_options": {
+                "db_type": "MariaDB"
+            },
+            "project_metadata": {
+                "title": "Aplicație generată",
+                "description": "Lucrare de diplomă - Sesiunea Iulie 2022",
+                "version": "0.0.1",
+                "creator_name": "Ionuț-Alexandru Baltariu",
+                "creator_website": "https://www.edu.tuiasi.ro/"
+            },
+            "run_main_app_in_container": true
+        }
 }
