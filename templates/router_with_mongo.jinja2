@@ -108,7 +108,7 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}, res
     try:
         {{ entity.table_name|lower }} = get_all_{{ entity.table_name|lower }}_with_filters()
         for existing in {{ entity.table_name|lower }}:
-            if existing["{{ entity.primary_key }}"] == {{ entity.name }}.{{ entity.primary_key }}:
+            if existing["{{ entity.primary_key }}"] == {{ entity.name|lower }}.{{ entity.primary_key }}:
                 response.status_code = status.HTTP_409_CONFLICT
                 response_body = get_error_body(response.status_code,
                                                "Cannot create the resource with the given identifier because "
