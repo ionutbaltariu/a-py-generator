@@ -91,7 +91,7 @@ class RelationshipHandler:
         fields = [ResourceField(name=f"id", type="integer", nullable=False),
                   ResourceField(name=f"{parent_table.primary_key}", nullable=False, **params),
                   ResourceField(name=f"{child_table.primary_key}", nullable=False, **params2)]
-        table_name = f"{parent_table.table_name}_{child_table.table_name}".lower()
+        table_name = f"{parent_table.table_name}_{child_table.table_name}"
 
         relationships = [Relationship(type="MANY-TO-MANY",
                                       table=parent_table.table_name,

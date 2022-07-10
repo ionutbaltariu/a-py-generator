@@ -8,6 +8,17 @@
                     "name": "isbn",
                     "type": "string",
                     "length": 100,
+                    "nullable" : false
+                },
+                {
+                    "name": "title",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false
+                },
+                {
+                    "name": "year_of_publishing",
+                    "type": "integer",
                     "nullable": false
                 }
             ],
