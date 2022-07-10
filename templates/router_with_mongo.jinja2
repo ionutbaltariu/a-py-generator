@@ -104,7 +104,18 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}, res
 
     {{ entity.name|lower }}_dict = {{ entity.name|lower }}.dict()
     del {{ entity.name|lower }}_dict["links"]
+
     try:
+        {{ entity.table_name|lower }} = get_all_{{ entity.table_name|lower }}_with_filters()
+        for existing in {{ entity.table_name|lower }}:
+            if existing["{{ entity.primary_key }}"] == {{ entity.name }}.{{ entity.primary_key }}:
+                response.status_code = status.HTTP_409_CONFLICT
+                response_body = get_error_body(response.status_code,
+                                               "Cannot create the resource with the given identifier because "
+                                               "it already exists.",
+                                               "DUPLICATE_ENTRY")
+                return response_body
+
         db_response = insert_{{ entity.name|lower }}({{ entity.name|lower }}_dict)
         response.status_code = status.HTTP_201_CREATED
         response_body = CREATE_GENERIC_SUCCESS_STATUS_BODY

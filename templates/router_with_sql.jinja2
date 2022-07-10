@@ -107,6 +107,14 @@ def post_{{ entity.name|lower }}({{ entity.name|lower }}: {{ entity.name }}, res
     db_response = insert_{{ entity.name|lower }}(**{{ entity.name|lower }}_dict)
 
     if db_response.error:
+        if "Duplicate entry" in str(db_response.error):
+            response.status_code = status.HTTP_409_CONFLICT
+            response_body = get_error_body(response.status_code,
+                                           "Cannot create the resource with the given identifier because "
+                                           "it already exists.",
+                                           "DUPLICATE_ENTRY")
+            return response_body
+
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         response_body = get_error_body(response.status_code, str(db_response.error), "EXCEPTION")
     else:
